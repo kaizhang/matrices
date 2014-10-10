@@ -4,7 +4,10 @@
 name:                matrices
 version:             0.1.0
 synopsis:            native matrix based on vector
--- description:         
+description:         This library provide the APIs for creating, indexing,
+                     modifying matrices (2d arrays). The underling data
+                     structure is vector. It's not intended to be a linear
+                     algebra library.
 license:             BSD3
 license-file:        LICENSE
 author:              Kai Zhang
@@ -18,11 +21,12 @@ cabal-version:       >=1.10
 library
   exposed-modules:
       Data.Matrix
+    , Data.Matrix.Mutable
     , Data.Matrix.Generic
-    , Data.Matrix.Unboxed
     , Data.Matrix.Generic.Mutable
     , Data.Matrix.Generic.Base
     , Data.Matrix.Generic.Types
+    , Data.Matrix.Unboxed
     , Data.Matrix.Unboxed.Mutable
 
   -- other-modules:       
