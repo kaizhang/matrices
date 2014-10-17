@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                matrices
-version:             0.1.0
+version:             0.1.1
 synopsis:            native matrix based on vector
 description:         This library provide the APIs for creating, indexing,
                      modifying matrices (2d arrays). The underling data
@@ -12,7 +12,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Kai Zhang
 maintainer:          kai@kzhang.org
-copyright:           <c> 2014 Kai Zhang
+copyright:           (c) 2014 Kai Zhang
 category:            Data
 build-type:          Simple
 -- extra-source-files:  
@@ -26,8 +26,12 @@ library
     , Data.Matrix.Generic.Mutable
     , Data.Matrix.Generic.Base
     , Data.Matrix.Generic.Types
+    , Data.Matrix.Storable
+    , Data.Matrix.Storable.Mutable
     , Data.Matrix.Unboxed
     , Data.Matrix.Unboxed.Mutable
+
+  ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
 
   -- other-modules:       
 
@@ -38,3 +42,7 @@ library
 
   hs-source-dirs:      src
   default-language:    Haskell2010
+
+source-repository head
+  type: git
+  location: https://github.com/kaizhang/matrices.git

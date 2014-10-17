@@ -17,12 +17,15 @@ module Data.Matrix.Generic.Base
     ( rows
     , cols
     , (!)
+    , unsafeIndex
     , matrix
     , flatten
     , fromVector
     , toRows
+    , fromRows
     , toList
     , toLists
+    , fromLists
     , tr
     , subMatrix
     , ident
@@ -50,6 +53,12 @@ cols (Matrix _ n _ _ _) = n
   where
     idx = offset + i * tda + j
 {-# INLINE (!) #-}
+
+unsafeIndex :: G.Vector v a => Matrix v a -> (Int, Int) -> a
+unsafeIndex (Matrix _ _ tda offset vec) (i,j) = vec `G.unsafeIndex` idx
+  where
+    idx = offset + i * tda + j
+{-# INLINE unsafeIndex #-}
 
 matrix :: G.Vector v a => Int -> [a] -> Matrix v a
 matrix ncol xs | n `mod` ncol /= 0 = error "incorrect length"
@@ -84,9 +93,24 @@ toRows (Matrix m n tda offset vec) = loop 0
     f i = offset + i * tda
 {-# INLINE toRows #-}
 
+fromRows :: G.Vector v a => [v a] -> Matrix v a
+fromRows xs = fromVector r c . G.concat $ xs
+  where
+    r = length xs
+    c = G.length . head $ xs
+{-# INLINE fromRows #-}
+
 toLists :: G.Vector v a => Matrix v a -> [[a]]
 toLists = map G.toList . toRows
 {-# INLINE toLists #-}
+
+-- | doesn't check if the list of list is a valid matrix
+fromLists :: G.Vector v a => [[a]] -> Matrix v a
+fromLists xs = fromVector r c . G.fromList . concat $ xs
+  where
+    r = length xs
+    c = length .head $ xs
+{-# INLINE fromLists #-}
 
 subMatrix :: G.Vector v a => (Int, Int) -> (Int, Int) -> Matrix v a -> Matrix v a
 subMatrix (ri, rj) (ci, cj) (Matrix _ n tda offset vec) =

@@ -27,11 +27,11 @@ import qualified Data.Vector.Generic.Mutable as GM
 -- | row-major matrix supporting efficient slice
 data Matrix v a where
     Matrix :: G.Vector v a
-           => !Int    -- ^ number of rows
-           -> !Int    -- ^ number of cols
-           -> !Int    -- ^ physical row dimension
-           -> !Int    -- ^ offset
-           -> !(v a)  -- ^ flat matrix
+           => !Int    -- number of rows
+           -> !Int    -- number of cols
+           -> !Int    -- physical row dimension
+           -> !Int    -- offset
+           -> !(v a)  -- flat matrix
            -> Matrix v a
 
 -- | mutable matrix
