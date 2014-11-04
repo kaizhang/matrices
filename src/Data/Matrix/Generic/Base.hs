@@ -22,11 +22,15 @@ module Data.Matrix.Generic.Base
     , flatten
     , fromVector
     , toRows
+    , toColumns
     , fromRows
+    , fromColumns
     , toList
     , toLists
     , fromLists
     , tr
+    , takeRow
+    , takeColumn
     , subMatrix
     , ident
     , diag
@@ -93,12 +97,22 @@ toRows (Matrix m n tda offset vec) = loop 0
     f i = offset + i * tda
 {-# INLINE toRows #-}
 
+toColumns :: G.Vector v a => Matrix v a -> [v a]
+toColumns m = map (`takeRow` m) [0 .. c-1]
+  where c = cols m
+{-# INLINE toColumns #-}
+
 fromRows :: G.Vector v a => [v a] -> Matrix v a
-fromRows xs = fromVector r c . G.concat $ xs
+fromRows xs | any (\x -> G.length x /= c) xs = error "inequal length"
+            | otherwise = fromVector r c . G.concat $ xs
   where
     r = length xs
     c = G.length . head $ xs
 {-# INLINE fromRows #-}
+
+fromColumns :: G.Vector v a => [v a] -> Matrix v a
+fromColumns = tr . fromRows
+{-# INLINE fromColumns #-}
 
 toLists :: G.Vector v a => Matrix v a -> [[a]]
 toLists = map G.toList . toRows
@@ -111,6 +125,21 @@ fromLists xs = fromVector r c . G.fromList . concat $ xs
     r = length xs
     c = length .head $ xs
 {-# INLINE fromLists #-}
+
+takeRow :: G.Vector v a => Int -> Matrix v a -> v a
+takeRow i (Matrix _ c tda offset vec) = G.slice i' c vec
+  where
+    i' = offset + i * tda
+{-# INLINE takeRow #-}
+
+takeColumn :: G.Vector v a => Int -> Matrix v a -> v a
+takeColumn j (Matrix r _ tda offset vec) = G.create $ GM.new r >>= go idx vec r 0
+  where
+    go f vec' r' !i v | i >= r' = return v
+                      | otherwise = do GM.unsafeWrite v i $ vec' G.! f i
+                                       go f vec' r' (i+1) v
+    idx i = offset + i * tda + j
+{-# INLINE takeColumn #-}
 
 subMatrix :: G.Vector v a => (Int, Int) -> (Int, Int) -> Matrix v a -> Matrix v a
 subMatrix (ri, rj) (ci, cj) (Matrix _ n tda offset vec) =
