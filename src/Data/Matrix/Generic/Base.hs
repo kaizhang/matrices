@@ -39,6 +39,10 @@ module Data.Matrix.Generic.Base
     , isSymmetric
     , force
     , Data.Matrix.Generic.Base.map
+    , Data.Matrix.Generic.Base.mapM
+    , Data.Matrix.Generic.Base.mapM_
+    , Data.Matrix.Generic.Base.forM
+    , Data.Matrix.Generic.Base.forM_
     ) where
 
 import Control.Arrow ((***), (&&&))
@@ -200,12 +204,14 @@ fromBlocks d ms = fromVector m n $ G.create $ GM.replicate (m*n) d >>= go n ms
                 let c = cols x
                     r = rows x
                     vec = flatten x
-                    step i u = do GM.unsafeWrite v ((cr + i `div` c) * n' + i `mod` c + cc) u
-                                  return (i+1)
+                    step i u = do
+                        GM.unsafeWrite v ((cr + i `div` c) * n' + i `mod` c + cc) u
+                        return (i+1)
                 G.foldM'_ step (0::Int) vec
                 return (max maxR r, cc + c)
     -- figure out the dimension of the new matrix
-    (m, n) = (sum *** maximum) . unzip . Prelude.map ((maximum *** sum) . unzip . Prelude.map (rows &&& cols)) $ ms
+    (m, n) = (sum *** maximum) . unzip . Prelude.map ((maximum *** sum) .
+                unzip . Prelude.map (rows &&& cols)) $ ms
 {-# INLINE fromBlocks #-}
 
 isSymmetric :: (Eq a, G.Vector v a) => Matrix v a -> Bool
@@ -223,3 +229,19 @@ force m@(Matrix r c _ _ _) = fromVector r c . G.force . flatten $ m
 map :: (G.Vector v a, G.Vector v b) => (a -> b) -> Matrix v a -> Matrix v b
 map f m@(Matrix r c _ _ _) = fromVector r c $ G.map f . flatten $ m
 {-# INLINE map #-}
+
+mapM :: (G.Vector v a, G.Vector v b, Monad m) => (a -> m b) -> Matrix v a -> m (Matrix v b)
+mapM f m@(Matrix r c _ _ _) = liftM (fromVector r c) . G.mapM f . flatten $ m
+{-# INLINE mapM #-}
+
+mapM_ :: (G.Vector v a, Monad m) => (a -> m b) -> Matrix v a -> m ()
+mapM_ f = G.mapM_ f . flatten
+{-# INLINE mapM_ #-}
+
+forM :: (G.Vector v a, G.Vector v b, Monad m) => Matrix v a -> (a -> m b) -> m (Matrix v b)
+forM = flip Data.Matrix.Generic.Base.mapM
+{-# INLINE forM #-}
+
+forM_ :: (G.Vector v a, Monad m) => Matrix v a -> (a -> m b) -> m ()
+forM_ = flip Data.Matrix.Generic.Base.mapM_
+{-# INLINE forM_ #-}
