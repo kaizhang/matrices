@@ -37,6 +37,8 @@ module Data.Matrix.Generic.Base
     , diagRect
     , fromBlocks
     , isSymmetric
+    , force
+    , Data.Matrix.Generic.Base.map
     ) where
 
 import Control.Arrow ((***), (&&&))
@@ -98,7 +100,7 @@ toRows (Matrix m n tda offset vec) = loop 0
 {-# INLINE toRows #-}
 
 toColumns :: G.Vector v a => Matrix v a -> [v a]
-toColumns m = map (`takeRow` m) [0 .. c-1]
+toColumns m = Prelude.map (`takeRow` m) [0 .. c-1]
   where c = cols m
 {-# INLINE toColumns #-}
 
@@ -115,7 +117,7 @@ fromColumns = tr . fromRows
 {-# INLINE fromColumns #-}
 
 toLists :: G.Vector v a => Matrix v a -> [[a]]
-toLists = map G.toList . toRows
+toLists = Prelude.map G.toList . toRows
 {-# INLINE toLists #-}
 
 -- | doesn't check if the list of list is a valid matrix
@@ -203,7 +205,7 @@ fromBlocks d ms = fromVector m n $ G.create $ GM.replicate (m*n) d >>= go n ms
                 G.foldM'_ step (0::Int) vec
                 return (max maxR r, cc + c)
     -- figure out the dimension of the new matrix
-    (m, n) = (sum *** maximum) . unzip . map ((maximum *** sum) . unzip . map (rows &&& cols)) $ ms
+    (m, n) = (sum *** maximum) . unzip . Prelude.map ((maximum *** sum) . unzip . Prelude.map (rows &&& cols)) $ ms
 {-# INLINE fromBlocks #-}
 
 isSymmetric :: (Eq a, G.Vector v a) => Matrix v a -> Bool
@@ -213,3 +215,11 @@ isSymmetric m@(Matrix r c _ _ _) | r /= c = False
     f i = all g [i + 1 .. c-1]
       where g j = m ! (i,j) == m ! (j,i)
 {-# INLINE isSymmetric #-}
+
+force :: G.Vector v a => Matrix v a -> Matrix v a
+force m@(Matrix r c _ _ _) = fromVector r c . G.force . flatten $ m
+{-# INLINE force #-}
+
+map :: (G.Vector v a, G.Vector v b) => (a -> b) -> Matrix v a -> Matrix v b
+map f m@(Matrix r c _ _ _) = fromVector r c $ G.map f . flatten $ m
+{-# INLINE map #-}
