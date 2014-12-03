@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE Rank2Types #-}
 module Data.Matrix.Generic.Mutable
    ( fromMVector
    , thaw
@@ -11,10 +12,12 @@ module Data.Matrix.Generic.Mutable
    , unsafeRead
    , replicate
    , new
+   , create
    ) where
 
 import Prelude hiding (read, replicate)
 import Control.Monad
+import Control.Monad.ST
 import Data.Matrix.Generic.Types
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as GM
@@ -77,3 +80,7 @@ new :: (PrimMonad m, GM.MVector v a)
     => Int -> Int -> m (MMatrix v (PrimState m) a)
 new r c = fromMVector r c <$> GM.new (r*c)
 {-# INLINE new #-}
+
+create :: G.Vector v a => (forall s . ST s (MMatrix (G.Mutable v) s a)) -> Matrix v a
+create m = runST $ unsafeFreeze =<< m
+{-# INLINE create #-}
