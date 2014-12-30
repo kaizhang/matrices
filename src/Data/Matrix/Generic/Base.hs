@@ -75,7 +75,7 @@ unsafeIndex (Matrix _ _ tda offset vec) (i,j) = vec `G.unsafeIndex` idx
 
 matrix :: G.Vector v a => Int -> [a] -> Matrix v a
 matrix ncol xs | n `mod` ncol /= 0 = error "incorrect length"
-               | otherwise = fromVector nrow ncol vec
+               | otherwise = fromVector (nrow,ncol) vec
   where
     vec = G.fromList xs
     nrow = n `div` ncol
@@ -94,8 +94,8 @@ flatten (Matrix m n tda offset vec)
     f i = (G.!) vec $ offset + (i `div` n) * tda + i `mod` n
 {-# INLINE flatten #-}
 
-fromVector :: G.Vector v a => Int -> Int -> v a -> Matrix v a
-fromVector r c = Matrix r c c 0
+fromVector :: G.Vector v a => (Int, Int) -> v a -> Matrix v a
+fromVector (r,c) = Matrix r c c 0
 {-# INLINE fromVector #-}
 
 toList :: G.Vector v a => Matrix v a -> [a]
@@ -117,7 +117,7 @@ toColumns m = Prelude.map (takeRow m) [0 .. c-1]
 
 fromRows :: G.Vector v a => [v a] -> Matrix v a
 fromRows xs | any (\x -> G.length x /= c) xs = error "inequal length"
-            | otherwise = fromVector r c . G.concat $ xs
+            | otherwise = fromVector (r,c) . G.concat $ xs
   where
     r = length xs
     c = G.length . head $ xs
@@ -133,7 +133,7 @@ toLists = Prelude.map G.toList . toRows
 
 -- | doesn't check if the list of list is a valid matrix
 fromLists :: G.Vector v a => [[a]] -> Matrix v a
-fromLists xs = fromVector r c . G.fromList . concat $ xs
+fromLists xs = fromVector (r,c) . G.fromList . concat $ xs
   where
     r = length xs
     c = length .head $ xs
@@ -164,31 +164,30 @@ subMatrix (ri, rj) (ci, cj) (Matrix _ n tda offset vec) =
 {-# INLINE subMatrix #-}
 
 tr :: G.Vector v a => Matrix v a -> Matrix v a
-tr (Matrix r c tda offset vec) = fromVector c r $ G.generate (r*c) f
+tr (Matrix r c tda offset vec) = fromVector (c,r) $ G.generate (r*c) f
   where
     f i = vec G.! (offset + i `mod` r * tda + i `div` r)
 {-# INLINE tr #-}
 
 ident :: (Num a, G.Vector v a) => Int -> Matrix v a
-ident n = diagRect 0 n n $ replicate n 1
+ident n = diagRect 0 (n,n) $ replicate n 1
 {-# INLINE ident #-}
 
 -- | create a square matrix with given diagonal, other entries default to 0
 diag :: (Num a, G.Vector v a, F.Foldable t)
      => t a  -- ^ diagonal
      -> Matrix v a
-diag d = diagRect 0 n n d
+diag d = diagRect 0 (n,n) d
   where n = length . F.toList $ d
 {-# INLINE diag #-}
 
 -- | create a rectangular matrix with default values and given diagonal
 diagRect :: (G.Vector v a, F.Foldable t)
          => a         -- ^ default value
-         -> Int       -- ^ number of rows
-         -> Int       -- ^ number of columns
+         -> (Int, Int)
          -> t a       -- ^ diagonal
          -> Matrix v a
-diagRect z0 r c d = fromVector r c $ G.create $ GM.replicate n z0 >>= go d c
+diagRect z0 (r,c) d = fromVector (r,c) $ G.create $ GM.replicate n z0 >>= go d c
   where
     go xs c' v = F.foldlM f 0 xs >> return v
       where
@@ -200,7 +199,7 @@ fromBlocks :: G.Vector v a
            => a               -- ^ default value
            -> [[Matrix v a]]
            -> Matrix v a
-fromBlocks d ms = fromVector m n $ G.create $ GM.replicate (m*n) d >>= go n ms
+fromBlocks d ms = fromVector (m,n) $ G.create $ GM.replicate (m*n) d >>= go n ms
   where
     go n' xss v = foldM_ f 0 xss >> return v
       where
@@ -230,17 +229,17 @@ isSymmetric m@(Matrix r c _ _ _) | r /= c = False
 {-# INLINE isSymmetric #-}
 
 force :: G.Vector v a => Matrix v a -> Matrix v a
-force m@(Matrix r c _ _ _) = fromVector r c . G.force . flatten $ m
+force m@(Matrix r c _ _ _) = fromVector (r,c) . G.force . flatten $ m
 {-# INLINE force #-}
 
 imap :: (G.Vector v a, G.Vector v b) => ((Int, Int) -> a -> b) -> Matrix v a -> Matrix v b
-imap f m@(Matrix r c _ _ _) = fromVector r c $ G.imap f' . flatten $ m
+imap f m@(Matrix r c _ _ _) = fromVector (r,c) $ G.imap f' . flatten $ m
   where
     f' i = f (i `div` c, i `mod` c)
 {-# INLINE imap #-}
 
 map :: (G.Vector v a, G.Vector v b) => (a -> b) -> Matrix v a -> Matrix v b
-map f m@(Matrix r c _ _ _) = fromVector r c $ G.map f . flatten $ m
+map f m@(Matrix r c _ _ _) = fromVector (r,c) $ G.map f . flatten $ m
 {-# INLINE map #-}
 
 foldl :: G.Vector v b => (a -> b -> a) -> a -> Matrix v b -> a
@@ -248,7 +247,7 @@ foldl f acc m = G.foldl f acc . flatten $ m
 {-# INLINE foldl #-}
 
 mapM :: (G.Vector v a, G.Vector v b, Monad m) => (a -> m b) -> Matrix v a -> m (Matrix v b)
-mapM f m@(Matrix r c _ _ _) = liftM (fromVector r c) . G.mapM f . flatten $ m
+mapM f m@(Matrix r c _ _ _) = liftM (fromVector (r,c)) . G.mapM f . flatten $ m
 {-# INLINE mapM #-}
 
 mapM_ :: (G.Vector v a, Monad m) => (a -> m b) -> Matrix v a -> m ()

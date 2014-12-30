@@ -27,8 +27,8 @@ import Control.Monad.Primitive
 (<$>) :: Monad m => (a -> b) -> m a -> m b
 (<$>) = liftM
 
-fromMVector :: GM.MVector v a => Int -> Int -> v m a -> MMatrix v m a
-fromMVector r c = MMatrix r c c 0
+fromMVector :: GM.MVector v a => (Int, Int) -> v m a -> MMatrix v m a
+fromMVector (r,c) = MMatrix r c c 0
 {-# INLINE fromMVector #-}
 
 thaw :: PrimMonad m => Matrix v a -> m (MMatrix (G.Mutable v) (PrimState m) a)
@@ -73,12 +73,12 @@ unsafeRead (MMatrix _ _ tda offset v) (i,j) = GM.unsafeRead v idx
 
 replicate :: (PrimMonad m, GM.MVector v a)
           => Int -> Int -> a -> m (MMatrix v (PrimState m) a)
-replicate r c x = fromMVector r c <$> GM.replicate (r*c) x
+replicate r c x = fromMVector (r,c) <$> GM.replicate (r*c) x
 {-# INLINE replicate #-}
 
 new :: (PrimMonad m, GM.MVector v a)
     => Int -> Int -> m (MMatrix v (PrimState m) a)
-new r c = fromMVector r c <$> GM.new (r*c)
+new r c = fromMVector (r,c) <$> GM.new (r*c)
 {-# INLINE new #-}
 
 create :: G.Vector v a => (forall s . ST s (MMatrix (G.Mutable v) s a)) -> Matrix v a
