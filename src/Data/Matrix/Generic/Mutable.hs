@@ -72,13 +72,13 @@ unsafeRead (MMatrix _ _ tda offset v) (i,j) = GM.unsafeRead v idx
 {-# INLINE unsafeRead #-}
 
 replicate :: (PrimMonad m, GM.MVector v a)
-          => Int -> Int -> a -> m (MMatrix v (PrimState m) a)
-replicate r c x = fromMVector (r,c) <$> GM.replicate (r*c) x
+          => (Int, Int) -> a -> m (MMatrix v (PrimState m) a)
+replicate (r,c) x = fromMVector (r,c) <$> GM.replicate (r*c) x
 {-# INLINE replicate #-}
 
 new :: (PrimMonad m, GM.MVector v a)
-    => Int -> Int -> m (MMatrix v (PrimState m) a)
-new r c = fromMVector (r,c) <$> GM.new (r*c)
+    => (Int, Int) -> m (MMatrix v (PrimState m) a)
+new (r,c) = fromMVector (r,c) <$> GM.new (r*c)
 {-# INLINE new #-}
 
 create :: G.Vector v a => (forall s . ST s (MMatrix (G.Mutable v) s a)) -> Matrix v a

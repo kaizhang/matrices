@@ -111,7 +111,7 @@ toRows (Matrix m n tda offset vec) = loop 0
 {-# INLINE toRows #-}
 
 toColumns :: G.Vector v a => Matrix v a -> [v a]
-toColumns m = Prelude.map (takeRow m) [0 .. c-1]
+toColumns m = Prelude.map (takeColumn m) [0 .. c-1]
   where c = cols m
 {-# INLINE toColumns #-}
 
