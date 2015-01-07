@@ -36,6 +36,7 @@ module Data.Matrix.Generic.Base
     , ident
     , diag
     , diagRect
+    , takeDiag
     , fromBlocks
     , isSymmetric
     , force
@@ -194,6 +195,13 @@ diagRect z0 (r,c) d = fromVector (r,c) $ G.create $ GM.replicate n z0 >>= go d c
         f !i x = GM.unsafeWrite v (i*(c'+1)) x >> return (i+1)
     n = r * c
 {-# INLINE diagRect #-}
+
+-- | extracts the diagonal from a rectangular matrix
+takeDiag :: G.Vector v a => Matrix v a -> v a
+takeDiag mat@(Matrix r c _ _ _) = G.generate n $ \i -> unsafeIndex mat (i,i)
+  where
+    n = min r c
+{-# INLINE takeDiag #-}
 
 fromBlocks :: G.Vector v a
            => a               -- ^ default value
