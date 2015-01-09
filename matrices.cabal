@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                matrices
-version:             0.2.2
+version:             0.3.0
 synopsis:            native matrix based on vector
 description:         This library provide the APIs for creating, indexing,
                      modifying matrices (2d arrays). The underling data
@@ -36,7 +36,7 @@ library
   -- other-modules:       
 
   build-depends:
-      base >=4.0 && <4.8
+      base >=4.0 && <5
     , vector >=0.9
     , primitive
 

@@ -16,10 +16,13 @@
 module Data.Matrix.Generic.Base
     ( rows
     , cols
+    , dim
     , (!)
     , unsafeIndex
-    , matrix
     , empty
+
+    -- * Conversions
+    , matrix
     , flatten
     , fromVector
     , toRows
@@ -29,6 +32,10 @@ module Data.Matrix.Generic.Base
     , toList
     , toLists
     , fromLists
+
+    -- * Different matrix types
+    , convert
+
     , tr
     , takeRow
     , takeColumn
@@ -40,13 +47,18 @@ module Data.Matrix.Generic.Base
     , fromBlocks
     , isSymmetric
     , force
-    , imap
     , Data.Matrix.Generic.Base.foldl
+
+    -- * Mapping
+    , imap
     , Data.Matrix.Generic.Base.map
+
+    -- * Monadic mapping
     , Data.Matrix.Generic.Base.mapM
     , Data.Matrix.Generic.Base.mapM_
     , Data.Matrix.Generic.Base.forM
     , Data.Matrix.Generic.Base.forM_
+
     ) where
 
 import Control.Arrow ((***), (&&&))
@@ -62,6 +74,11 @@ rows (Matrix m _ _ _ _) = m
 cols :: G.Vector v a => Matrix v a -> Int
 cols (Matrix _ n _ _ _) = n
 
+dim :: G.Vector v a => Matrix v a -> (Int, Int)
+dim (Matrix r c _ _ _) = (r,c)
+{-# INLINE dim #-}
+
+-- TODO: better error message
 (!) :: G.Vector v a => Matrix v a -> (Int, Int) -> a
 (!) (Matrix _ _ tda offset vec) (i, j) = vec G.! idx
   where
@@ -74,6 +91,13 @@ unsafeIndex (Matrix _ _ tda offset vec) (i,j) = vec `G.unsafeIndex` idx
     idx = offset + i * tda + j
 {-# INLINE unsafeIndex #-}
 
+
+--reshape :: G.Vector v a => Matrix v a -> (Int, Int) -> Matrix v a
+
+empty :: G.Vector v a => Matrix v a
+empty = Matrix 0 0 0 0 G.empty
+{-# INLINE empty #-}
+
 matrix :: G.Vector v a => Int -> [a] -> Matrix v a
 matrix ncol xs | n `mod` ncol /= 0 = error "incorrect length"
                | otherwise = fromVector (nrow,ncol) vec
@@ -82,10 +106,6 @@ matrix ncol xs | n `mod` ncol /= 0 = error "incorrect length"
     nrow = n `div` ncol
     n = G.length vec
 {-# INLINE matrix #-}
-
-empty :: G.Vector v a => Matrix v a
-empty = Matrix 0 0 0 0 G.empty
-{-# INLINE empty #-}
 
 flatten :: Matrix v a -> v a
 flatten (Matrix m n tda offset vec)
@@ -140,6 +160,11 @@ fromLists xs = fromVector (r,c) . G.fromList . concat $ xs
     c = length .head $ xs
 {-# INLINE fromLists #-}
 
+-- | convert different matrix type
+convert :: (G.Vector v a, G.Vector w a) => Matrix v a -> Matrix w a
+convert (Matrix r c tda offset vec) = Matrix r c tda offset . G.convert $ vec
+{-# INLINE convert #-}
+
 takeRow :: G.Vector v a => Matrix v a -> Int -> v a
 takeRow (Matrix _ c tda offset vec) i = G.slice i' c vec
   where
@@ -155,13 +180,18 @@ takeColumn (Matrix r _ tda offset vec) j = G.create $ GM.new r >>= go idx vec r 
     idx i = offset + i * tda + j
 {-# INLINE takeColumn #-}
 
-subMatrix :: G.Vector v a => (Int, Int) -> (Int, Int) -> Matrix v a -> Matrix v a
-subMatrix (ri, rj) (ci, cj) (Matrix _ n tda offset vec) =
-    Matrix m' n' tda offset' vec
+-- | O(1) extract sub matrix
+subMatrix :: G.Vector v a
+          => (Int, Int)  -- ^ upper left corner of the submatrix
+          -> (Int, Int)  -- ^ bottom right corner of the submatrix
+          -> Matrix v a -> Matrix v a
+subMatrix (i,j) (i',j') (Matrix _ n tda offset vec)
+    | m' <= 0 || n' <= 0 = empty
+    | otherwise = Matrix m' n' tda offset' vec
   where
-    m' = rj - ri + 1
-    n' = cj - ci + 1
-    offset' = offset + ri * n + ci
+    m' = i' - i + 1
+    n' = j' - j + 1
+    offset' = offset + i * n + j
 {-# INLINE subMatrix #-}
 
 tr :: G.Vector v a => Matrix v a -> Matrix v a
