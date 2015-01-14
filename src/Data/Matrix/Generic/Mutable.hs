@@ -2,6 +2,8 @@
 {-# LANGUAGE Rank2Types #-}
 module Data.Matrix.Generic.Mutable
    ( fromMVector
+   , flatten
+   , takeRow
    , thaw
    , unsafeThaw
    , freeze
@@ -30,6 +32,23 @@ import Control.Monad.Primitive
 fromMVector :: GM.MVector v a => (Int, Int) -> v m a -> MMatrix v m a
 fromMVector (r,c) = MMatrix r c c 0
 {-# INLINE fromMVector #-}
+
+flatten :: PrimMonad m => MMatrix v (PrimState m) a -> m (v (PrimState m) a)
+flatten (MMatrix m n tda offset vec)
+    | n == tda = return $ GM.slice offset (m * n) vec
+    | otherwise = do
+        vec' <- GM.new (m*n)
+        forM_ [0 .. m*n] $ \i ->
+            GM.unsafeRead vec (offset + (i `div` n) * tda + i `mod` n) >>=
+                GM.unsafeWrite vec' i
+        return vec'
+{-# INLINE flatten #-}
+
+takeRow :: GM.MVector v a => MMatrix v m a -> Int -> v m a
+takeRow (MMatrix _ c tda offset vec) i = GM.slice i' c vec
+  where
+    i' = offset + i * tda
+{-# INLINE takeRow #-}
 
 thaw :: PrimMonad m => Matrix v a -> m (MMatrix (G.Mutable v) (PrimState m) a)
 thaw (Matrix r c tda offset v) = MMatrix r c tda offset <$> G.thaw v
