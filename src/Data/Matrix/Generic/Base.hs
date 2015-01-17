@@ -59,6 +59,8 @@ module Data.Matrix.Generic.Base
     , Data.Matrix.Generic.Base.forM
     , Data.Matrix.Generic.Base.forM_
 
+    , generate
+
     ) where
 
 import Control.Arrow ((***), (&&&))
@@ -159,6 +161,10 @@ fromLists xs = fromVector (r,c) . G.fromList . concat $ xs
     r = length xs
     c = length .head $ xs
 {-# INLINE fromLists #-}
+
+-- | construct upper triangular matrix from vector
+--upperTriangular :: (Num a, G.Vector v a) => Int -> v a -> Matrix v a
+--upperTriangular n vec = 
 
 -- | convert different matrix type
 convert :: (G.Vector v a, G.Vector w a) => Matrix v a -> Matrix w a
@@ -299,3 +305,7 @@ forM = flip Data.Matrix.Generic.Base.mapM
 forM_ :: (G.Vector v a, Monad m) => Matrix v a -> (a -> m b) -> m ()
 forM_ = flip Data.Matrix.Generic.Base.mapM_
 {-# INLINE forM_ #-}
+
+generate :: G.Vector v a => (Int, Int) -> ((Int, Int) -> a) -> Matrix v a
+generate (r,c) f = fromVector (r,c) . G.generate (r*c) $ \i -> f (i `div` c, i `mod` c)
+{-# INLINE generate #-}

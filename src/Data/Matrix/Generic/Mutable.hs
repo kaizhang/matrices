@@ -2,6 +2,7 @@
 {-# LANGUAGE Rank2Types #-}
 module Data.Matrix.Generic.Mutable
    ( fromMVector
+   , dim
    , flatten
    , takeRow
    , thaw
@@ -28,6 +29,10 @@ import Control.Monad.Primitive
 -- to be removed in GHC-7.10
 (<$>) :: Monad m => (a -> b) -> m a -> m b
 (<$>) = liftM
+
+dim :: MMatrix v m a -> (Int, Int)
+dim (MMatrix r c _ _ _) = (r,c)
+{-# INLINE dim #-}
 
 fromMVector :: GM.MVector v a => (Int, Int) -> v m a -> MMatrix v m a
 fromMVector (r,c) = MMatrix r c c 0
