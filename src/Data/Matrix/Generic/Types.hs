@@ -21,6 +21,11 @@ module Data.Matrix.Generic.Types
     , MMatrix(..)
     ) where
 
+import Data.Binary
+import qualified Data.Vector as V
+import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector.Storable as S
+import qualified Data.Vector.Binary ()
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as GM
 
@@ -33,6 +38,35 @@ data Matrix v a where
            -> !Int    -- offset
            -> !(v a)  -- flat matrix
            -> Matrix v a
+
+instance Binary a => Binary (Matrix V.Vector a) where
+    put = putGeneric
+    get = getGeneric
+
+instance (U.Unbox a, Binary a) => Binary (Matrix U.Vector a) where
+    put = putGeneric
+    get = getGeneric
+
+instance (S.Storable a, Binary a) => Binary (Matrix S.Vector a) where
+    put = putGeneric
+    get = getGeneric
+
+getGeneric :: (Binary (v a), G.Vector v a) => Get (Matrix v a)
+getGeneric = do
+    r <- get
+    c <- get
+    tda <- get
+    offset <- get
+    vec <- get
+    return $ Matrix r c tda offset vec
+
+putGeneric :: (Binary (v a), G.Vector v a) => Matrix v a -> Put
+putGeneric (Matrix r c tda offset vec) = do
+    put r
+    put c
+    put tda
+    put offset
+    put vec
 
 -- | mutable matrix
 data MMatrix v m a where
