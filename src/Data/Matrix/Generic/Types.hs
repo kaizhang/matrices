@@ -1,4 +1,3 @@
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -30,14 +29,12 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as GM
 
 -- | row-major matrix supporting efficient slice
-data Matrix v a where
-    Matrix :: G.Vector v a
-           => !Int    -- number of rows
-           -> !Int    -- number of cols
-           -> !Int    -- physical row dimension
-           -> !Int    -- offset
-           -> !(v a)  -- flat matrix
-           -> Matrix v a
+data Matrix v a = Matrix
+                    !Int    -- number of rows
+                    !Int    -- number of cols
+                    !Int    -- physical row dimension
+                    !Int    -- offset
+                    !(v a)  -- flat matrix
 
 instance Binary a => Binary (Matrix V.Vector a) where
     put = putGeneric
@@ -69,14 +66,7 @@ putGeneric (Matrix r c tda offset vec) = do
     put vec
 
 -- | mutable matrix
-data MMatrix v m a where
-    MMatrix :: GM.MVector v a
-            => !Int
-            -> !Int
-            -> !Int
-            -> !Int
-            -> !(v m a)
-            -> MMatrix v m a
+data MMatrix v m a = MMatrix !Int !Int !Int !Int !(v m a)
 
 instance (G.Vector v a, Show a) => Show (Matrix v a) where
     show mat = unlines . map (unwords . map show) . toLists $ mat

@@ -162,9 +162,9 @@ fromLists xs = fromVector (r,c) . G.fromList . concat $ xs
     c = length .head $ xs
 {-# INLINE fromLists #-}
 
--- | construct upper triangular matrix from vector
+---- | construct upper triangular matrix from vector
 --upperTriangular :: (Num a, G.Vector v a) => Int -> v a -> Matrix v a
---upperTriangular n vec = 
+--upperTriangular n vec =
 
 -- | convert different matrix type
 convert :: (G.Vector v a, G.Vector w a) => Matrix v a -> Matrix w a

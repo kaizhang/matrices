@@ -1,4 +1,3 @@
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE Rank2Types #-}
 module Data.Matrix.Generic.Mutable
    ( fromMVector
@@ -38,7 +37,8 @@ fromMVector :: GM.MVector v a => (Int, Int) -> v m a -> MMatrix v m a
 fromMVector (r,c) = MMatrix r c c 0
 {-# INLINE fromMVector #-}
 
-flatten :: PrimMonad m => MMatrix v (PrimState m) a -> m (v (PrimState m) a)
+flatten :: (GM.MVector v a, PrimMonad m)
+        => MMatrix v (PrimState m) a -> m (v (PrimState m) a)
 flatten (MMatrix m n tda offset vec)
     | n == tda = return $ GM.slice offset (m * n) vec
     | otherwise = do
@@ -55,11 +55,13 @@ takeRow (MMatrix _ c tda offset vec) i = GM.slice i' c vec
     i' = offset + i * tda
 {-# INLINE takeRow #-}
 
-thaw :: PrimMonad m => Matrix v a -> m (MMatrix (G.Mutable v) (PrimState m) a)
+thaw :: (G.Vector v a, PrimMonad m)
+     => Matrix v a -> m (MMatrix (G.Mutable v) (PrimState m) a)
 thaw (Matrix r c tda offset v) = MMatrix r c tda offset <$> G.thaw v
 {-# INLINE thaw #-}
 
-unsafeThaw :: PrimMonad m => Matrix v a -> m (MMatrix (G.Mutable v) (PrimState m) a)
+unsafeThaw :: (G.Vector v a, PrimMonad m)
+           => Matrix v a -> m (MMatrix (G.Mutable v) (PrimState m) a)
 unsafeThaw (Matrix r c tda offset v) = MMatrix r c tda offset <$> G.unsafeThaw v
 {-# INLINE unsafeThaw #-}
 
