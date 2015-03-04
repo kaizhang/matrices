@@ -70,24 +70,24 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as GM
 import Data.Matrix.Generic.Types
 
-rows :: G.Vector v a => Matrix v a -> Int
+rows :: Matrix v a -> Int
 rows (Matrix m _ _ _ _) = m
 
-cols :: G.Vector v a => Matrix v a -> Int
+cols :: Matrix v a -> Int
 cols (Matrix _ n _ _ _) = n
 
-dim :: G.Vector v a => Matrix v a -> (Int, Int)
+dim :: Matrix v a -> (Int, Int)
 dim (Matrix r c _ _ _) = (r,c)
 {-# INLINE dim #-}
 
 -- TODO: better error message
-(!) :: G.Vector v a => Matrix v a -> (Int, Int) -> a
+(!) :: Matrix v a -> (Int, Int) -> a
 (!) (Matrix _ _ tda offset vec) (i, j) = vec G.! idx
   where
     idx = offset + i * tda + j
 {-# INLINE (!) #-}
 
-unsafeIndex :: G.Vector v a => Matrix v a -> (Int, Int) -> a
+unsafeIndex :: Matrix v a -> (Int, Int) -> a
 unsafeIndex (Matrix _ _ tda offset vec) (i,j) = vec `G.unsafeIndex` idx
   where
     idx = offset + i * tda + j
@@ -121,11 +121,11 @@ fromVector :: G.Vector v a => (Int, Int) -> v a -> Matrix v a
 fromVector (r,c) = Matrix r c c 0
 {-# INLINE fromVector #-}
 
-toList :: G.Vector v a => Matrix v a -> [a]
-toList = G.toList . flatten
+toList :: Matrix v a -> [a]
+toList m@(Matrix _ _ _ _ _) = G.toList $ flatten m
 {-# INLINE toList #-}
 
-toRows :: G.Vector v a => Matrix v a -> [v a]
+toRows :: Matrix v a -> [v a]
 toRows (Matrix m n tda offset vec) = loop 0
   where
     loop !i | i < m = G.slice (f i) n vec : loop (i+1)
@@ -133,7 +133,7 @@ toRows (Matrix m n tda offset vec) = loop 0
     f i = offset + i * tda
 {-# INLINE toRows #-}
 
-toColumns :: G.Vector v a => Matrix v a -> [v a]
+toColumns :: Matrix v a -> [v a]
 toColumns m = Prelude.map (takeColumn m) [0 .. c-1]
   where c = cols m
 {-# INLINE toColumns #-}
@@ -150,8 +150,8 @@ fromColumns :: G.Vector v a => [v a] -> Matrix v a
 fromColumns = tr . fromRows
 {-# INLINE fromColumns #-}
 
-toLists :: G.Vector v a => Matrix v a -> [[a]]
-toLists = Prelude.map G.toList . toRows
+toLists :: Matrix v a -> [[a]]
+toLists m@(Matrix _ _ _ _ _) = Prelude.map G.toList $ toRows m
 {-# INLINE toLists #-}
 
 -- | doesn't check if the list of list is a valid matrix
@@ -162,22 +162,22 @@ fromLists xs = fromVector (r,c) . G.fromList . concat $ xs
     c = length .head $ xs
 {-# INLINE fromLists #-}
 
--- | construct upper triangular matrix from vector
+---- | construct upper triangular matrix from vector
 --upperTriangular :: (Num a, G.Vector v a) => Int -> v a -> Matrix v a
---upperTriangular n vec = 
+--upperTriangular n vec =
 
 -- | convert different matrix type
-convert :: (G.Vector v a, G.Vector w a) => Matrix v a -> Matrix w a
+convert :: G.Vector w a => Matrix v a -> Matrix w a
 convert (Matrix r c tda offset vec) = Matrix r c tda offset . G.convert $ vec
 {-# INLINE convert #-}
 
-takeRow :: G.Vector v a => Matrix v a -> Int -> v a
+takeRow :: Matrix v a -> Int -> v a
 takeRow (Matrix _ c tda offset vec) i = G.slice i' c vec
   where
     i' = offset + i * tda
 {-# INLINE takeRow #-}
 
-takeColumn :: G.Vector v a => Matrix v a -> Int -> v a
+takeColumn :: Matrix v a -> Int -> v a
 takeColumn (Matrix r _ tda offset vec) j = G.create $ GM.new r >>= go idx vec r 0
   where
     go f vec' r' !i v | i >= r' = return v
@@ -187,8 +187,7 @@ takeColumn (Matrix r _ tda offset vec) j = G.create $ GM.new r >>= go idx vec r 
 {-# INLINE takeColumn #-}
 
 -- | O(1) extract sub matrix
-subMatrix :: G.Vector v a
-          => (Int, Int)  -- ^ upper left corner of the submatrix
+subMatrix :: (Int, Int)  -- ^ upper left corner of the submatrix
           -> (Int, Int)  -- ^ bottom right corner of the submatrix
           -> Matrix v a -> Matrix v a
 subMatrix (i,j) (i',j') (Matrix _ n tda offset vec)
@@ -200,7 +199,7 @@ subMatrix (i,j) (i',j') (Matrix _ n tda offset vec)
     offset' = offset + i * n + j
 {-# INLINE subMatrix #-}
 
-tr :: G.Vector v a => Matrix v a -> Matrix v a
+tr :: Matrix v a -> Matrix v a
 tr (Matrix r c tda offset vec) = fromVector (c,r) $ G.generate (r*c) f
   where
     f i = vec G.! (offset + i `mod` r * tda + i `div` r)
@@ -233,7 +232,7 @@ diagRect z0 (r,c) d = fromVector (r,c) $ G.create $ GM.replicate n z0 >>= go d c
 {-# INLINE diagRect #-}
 
 -- | extracts the diagonal from a rectangular matrix
-takeDiag :: G.Vector v a => Matrix v a -> v a
+takeDiag :: Matrix v a -> v a
 takeDiag mat@(Matrix r c _ _ _) = G.generate n $ \i -> unsafeIndex mat (i,i)
   where
     n = min r c
@@ -264,7 +263,7 @@ fromBlocks d ms = fromVector (m,n) $ G.create $ GM.replicate (m*n) d >>= go n ms
                 unzip . Prelude.map (rows &&& cols)) $ ms
 {-# INLINE fromBlocks #-}
 
-isSymmetric :: (Eq a, G.Vector v a) => Matrix v a -> Bool
+isSymmetric :: Eq a => Matrix v a -> Bool
 isSymmetric m@(Matrix r c _ _ _) | r /= c = False
                                  | otherwise = all f [0 .. r-1]
   where
@@ -272,37 +271,37 @@ isSymmetric m@(Matrix r c _ _ _) | r /= c = False
       where g j = m ! (i,j) == m ! (j,i)
 {-# INLINE isSymmetric #-}
 
-force :: G.Vector v a => Matrix v a -> Matrix v a
+force :: Matrix v a -> Matrix v a
 force m@(Matrix r c _ _ _) = fromVector (r,c) . G.force . flatten $ m
 {-# INLINE force #-}
 
-imap :: (G.Vector v a, G.Vector v b) => ((Int, Int) -> a -> b) -> Matrix v a -> Matrix v b
+imap :: G.Vector v b => ((Int, Int) -> a -> b) -> Matrix v a -> Matrix v b
 imap f m@(Matrix r c _ _ _) = fromVector (r,c) $ G.imap f' . flatten $ m
   where
     f' i = f (i `div` c, i `mod` c)
 {-# INLINE imap #-}
 
-map :: (G.Vector v a, G.Vector v b) => (a -> b) -> Matrix v a -> Matrix v b
+map :: G.Vector v b => (a -> b) -> Matrix v a -> Matrix v b
 map f m@(Matrix r c _ _ _) = fromVector (r,c) $ G.map f . flatten $ m
 {-# INLINE map #-}
 
-foldl :: G.Vector v b => (a -> b -> a) -> a -> Matrix v b -> a
-foldl f acc m = G.foldl f acc . flatten $ m
+foldl :: (a -> b -> a) -> a -> Matrix v b -> a
+foldl f acc m@(Matrix _ _ _ _ _) = G.foldl f acc . flatten $ m
 {-# INLINE foldl #-}
 
-mapM :: (G.Vector v a, G.Vector v b, Monad m) => (a -> m b) -> Matrix v a -> m (Matrix v b)
+mapM :: (G.Vector v b, Monad m) => (a -> m b) -> Matrix v a -> m (Matrix v b)
 mapM f m@(Matrix r c _ _ _) = liftM (fromVector (r,c)) . G.mapM f . flatten $ m
 {-# INLINE mapM #-}
 
-mapM_ :: (G.Vector v a, Monad m) => (a -> m b) -> Matrix v a -> m ()
-mapM_ f = G.mapM_ f . flatten
+mapM_ :: Monad m => (a -> m b) -> Matrix v a -> m ()
+mapM_ f m@(Matrix _ _ _ _ _) = G.mapM_ f $ flatten m
 {-# INLINE mapM_ #-}
 
-forM :: (G.Vector v a, G.Vector v b, Monad m) => Matrix v a -> (a -> m b) -> m (Matrix v b)
+forM :: (G.Vector v b, Monad m) => Matrix v a -> (a -> m b) -> m (Matrix v b)
 forM = flip Data.Matrix.Generic.Base.mapM
 {-# INLINE forM #-}
 
-forM_ :: (G.Vector v a, Monad m) => Matrix v a -> (a -> m b) -> m ()
+forM_ :: Monad m => Matrix v a -> (a -> m b) -> m ()
 forM_ = flip Data.Matrix.Generic.Base.mapM_
 {-# INLINE forM_ #-}
 

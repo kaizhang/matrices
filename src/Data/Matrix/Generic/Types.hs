@@ -86,12 +86,12 @@ instance G.Vector v Bool => Show (Matrix v Bool) where
       where
         showBool x = if x then "1" else "0"
 
-toRows :: G.Vector v a => Matrix v a -> [v a]
+toRows :: Matrix v a -> [v a]
 toRows (Matrix m n tda offset vec) = loop 0
     where
     loop !i | i < m = G.slice (f i) n vec : loop (i+1)
             | otherwise = []
     f i = offset + i * tda
 
-toLists :: G.Vector v a => Matrix v a -> [[a]]
-toLists = map G.toList . toRows
+toLists :: Matrix v a -> [[a]]
+toLists m@(Matrix _ _ _ _ _) = map G.toList $ toRows m
