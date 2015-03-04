@@ -109,7 +109,7 @@ matrix ncol xs | n `mod` ncol /= 0 = error "incorrect length"
     n = G.length vec
 {-# INLINE matrix #-}
 
-flatten :: Matrix v a -> v a
+flatten :: G.Vector v a => Matrix v a -> v a
 flatten (Matrix m n tda offset vec)
     | n == tda = G.slice offset (m * n) vec
     | otherwise = G.generate (m * n) f
