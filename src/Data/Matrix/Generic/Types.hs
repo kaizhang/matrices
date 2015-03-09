@@ -26,15 +26,13 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as S
 import qualified Data.Vector.Binary ()
 import qualified Data.Vector.Generic as G
-import qualified Data.Vector.Generic.Mutable as GM
 
 -- | row-major matrix supporting efficient slice
-data Matrix v a = Matrix
-                    !Int    -- number of rows
-                    !Int    -- number of cols
-                    !Int    -- physical row dimension
-                    !Int    -- offset
-                    !(v a)  -- flat matrix
+data Matrix v a = Matrix !Int    -- number of rows
+                         !Int    -- number of cols
+                         !Int    -- physical row dimension
+                         !Int    -- offset
+                         !(v a)  -- flat matrix
 
 instance Binary a => Binary (Matrix V.Vector a) where
     put = putGeneric
