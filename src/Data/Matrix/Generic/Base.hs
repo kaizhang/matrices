@@ -109,7 +109,7 @@ matrix ncol xs | n `mod` ncol /= 0 = error "incorrect length"
     n = G.length vec
 {-# INLINE matrix #-}
 
-flatten :: Matrix v a -> v a
+flatten :: G.Vector v a => Matrix v a -> v a
 flatten (Matrix m n tda offset vec)
     | n == tda = G.slice offset (m * n) vec
     | otherwise = G.generate (m * n) f
@@ -162,9 +162,9 @@ fromLists xs = fromVector (r,c) . G.fromList . concat $ xs
     c = length .head $ xs
 {-# INLINE fromLists #-}
 
--- | construct upper triangular matrix from vector
+---- | construct upper triangular matrix from vector
 --upperTriangular :: (Num a, G.Vector v a) => Int -> v a -> Matrix v a
---upperTriangular n vec = 
+--upperTriangular n vec =
 
 -- | convert different matrix type
 convert :: (G.Vector v a, G.Vector w a) => Matrix v a -> Matrix w a
