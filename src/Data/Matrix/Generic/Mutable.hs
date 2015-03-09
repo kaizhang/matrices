@@ -49,7 +49,7 @@ flatten (MMatrix m n tda offset vec)
         return vec'
 {-# INLINE flatten #-}
 
-takeRow :: GM.MVector v a => MMatrix v m a -> Int -> v m a
+takeRow :: MMatrix v m a -> Int -> v m a
 takeRow (MMatrix _ c tda offset vec) i = GM.slice i' c vec
   where
     i' = offset + i * tda
@@ -73,25 +73,24 @@ unsafeFreeze :: (PrimMonad m, G.Vector v a) => MMatrix (G.Mutable v) (PrimState 
 unsafeFreeze (MMatrix r c tda offset v) = Matrix r c tda offset <$> G.unsafeFreeze v
 {-# INLINE unsafeFreeze #-}
 
-write :: (PrimMonad m, GM.MVector v a)
-      => MMatrix v (PrimState m) a -> (Int, Int) -> a -> m ()
+write :: PrimMonad m => MMatrix v (PrimState m) a -> (Int, Int) -> a -> m ()
 write (MMatrix _ _ tda offset v) (i,j) = GM.write v idx
   where idx = offset + i * tda + j
 {-# INLINE write #-}
 
-unsafeWrite :: (PrimMonad m, GM.MVector v a)
+unsafeWrite :: PrimMonad m
             => MMatrix v (PrimState m) a -> (Int, Int) -> a -> m ()
 unsafeWrite (MMatrix _ _ tda offset v) (i,j) = GM.unsafeWrite v idx
   where idx = offset + i * tda + j
 {-# INLINE unsafeWrite #-}
 
-read :: (PrimMonad m, GM.MVector v a)
+read :: PrimMonad m
      => MMatrix v (PrimState m) a -> (Int, Int) -> m a
 read (MMatrix _ _ tda offset v) (i,j) = GM.read v idx
   where idx = offset + i * tda + j
 {-# INLINE read #-}
 
-unsafeRead :: (PrimMonad m, GM.MVector v a)
+unsafeRead :: PrimMonad m
            => MMatrix v (PrimState m) a -> (Int, Int) -> m a
 unsafeRead (MMatrix _ _ tda offset v) (i,j) = GM.unsafeRead v idx
   where idx = offset + i * tda + j
