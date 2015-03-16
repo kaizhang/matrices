@@ -69,37 +69,45 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as GM
 import Data.Matrix.Generic.Types
 
+-- | O(1) Return the number of rows
 rows :: G.Vector v a => Matrix v a -> Int
 rows (Matrix m _ _ _ _) = m
 
+-- | O(1) Return the number of columns
 cols :: G.Vector v a => Matrix v a -> Int
 cols (Matrix _ n _ _ _) = n
 
+-- | O(1) Return the size of matrix
 dim :: G.Vector v a => Matrix v a -> (Int, Int)
 dim (Matrix r c _ _ _) = (r,c)
 {-# INLINE dim #-}
 
--- TODO: better error message
+-- | O(1) Indexing
 (!) :: G.Vector v a => Matrix v a -> (Int, Int) -> a
 (!) (Matrix _ _ tda offset vec) (i, j) = vec G.! idx
   where
     idx = offset + i * tda + j
 {-# INLINE (!) #-}
 
+-- | O(1) Unsafe indexing without bound check
 unsafeIndex :: G.Vector v a => Matrix v a -> (Int, Int) -> a
 unsafeIndex (Matrix _ _ tda offset vec) (i,j) = vec `G.unsafeIndex` idx
   where
     idx = offset + i * tda + j
 {-# INLINE unsafeIndex #-}
 
-
 --reshape :: G.Vector v a => Matrix v a -> (Int, Int) -> Matrix v a
 
+-- | O(1) Return an empty matrix
 empty :: G.Vector v a => Matrix v a
 empty = Matrix 0 0 0 0 G.empty
 {-# INLINE empty #-}
 
-matrix :: G.Vector v a => Int -> [a] -> Matrix v a
+-- | O(m*n) Matrix construction
+matrix :: G.Vector v a
+       => Int  -- ^ number of columns
+       -> [a]  -- ^ row list
+       -> Matrix v a
 matrix ncol xs | n `mod` ncol /= 0 = error "incorrect length"
                | otherwise = fromVector (nrow,ncol) vec
   where
@@ -108,6 +116,7 @@ matrix ncol xs | n `mod` ncol /= 0 = error "incorrect length"
     n = G.length vec
 {-# INLINE matrix #-}
 
+-- | Create a vector by concatenating rows
 flatten :: G.Vector v a => Matrix v a -> v a
 flatten (Matrix m n tda offset vec)
     | n == tda = G.slice offset (m * n) vec
@@ -116,14 +125,17 @@ flatten (Matrix m n tda offset vec)
     f i = (G.!) vec $ offset + (i `div` n) * tda + i `mod` n
 {-# INLINE flatten #-}
 
+-- | O(1) Create matrix from vector
 fromVector :: G.Vector v a => (Int, Int) -> v a -> Matrix v a
 fromVector (r,c) = Matrix r c c 0
 {-# INLINE fromVector #-}
 
+-- | O(m*n) Create a list by concatenating rows
 toList :: G.Vector v a => Matrix v a -> [a]
 toList = G.toList . flatten
 {-# INLINE toList #-}
 
+-- | O(m) Return the rows
 toRows :: G.Vector v a => Matrix v a -> [v a]
 toRows (Matrix m n tda offset vec) = loop 0
   where
@@ -132,11 +144,13 @@ toRows (Matrix m n tda offset vec) = loop 0
     f i = offset + i * tda
 {-# INLINE toRows #-}
 
+-- | O(m*n) Return the columns
 toColumns :: G.Vector v a => Matrix v a -> [v a]
 toColumns m = Prelude.map (takeColumn m) [0 .. c-1]
   where c = cols m
 {-# INLINE toColumns #-}
 
+-- | O(m*n) Create matrix from rows
 fromRows :: G.Vector v a => [v a] -> Matrix v a
 fromRows xs | any (\x -> G.length x /= c) xs = error "inequal length"
             | otherwise = fromVector (r,c) . G.concat $ xs
@@ -145,15 +159,18 @@ fromRows xs | any (\x -> G.length x /= c) xs = error "inequal length"
     c = G.length . head $ xs
 {-# INLINE fromRows #-}
 
+-- | O(m*n) Create matrix from columns
 fromColumns :: G.Vector v a => [v a] -> Matrix v a
 fromColumns = tr . fromRows
 {-# INLINE fromColumns #-}
 
+-- | O(m*n) List of lists
 toLists :: G.Vector v a => Matrix v a -> [[a]]
 toLists = Prelude.map G.toList . toRows
 {-# INLINE toLists #-}
 
--- | doesn't check if the list of list is a valid matrix
+-- | O(m*n) Create matrix from list of lists, it doesn't check if the list of
+-- list is a valid matrix
 fromLists :: G.Vector v a => [[a]] -> Matrix v a
 fromLists xs = fromVector (r,c) . G.fromList . concat $ xs
   where
@@ -165,17 +182,19 @@ fromLists xs = fromVector (r,c) . G.fromList . concat $ xs
 --upperTriangular :: (Num a, G.Vector v a) => Int -> v a -> Matrix v a
 --upperTriangular n vec =
 
--- | convert different matrix type
+-- | O(m*n) Convert different matrix type
 convert :: (G.Vector v a, G.Vector w a) => Matrix v a -> Matrix w a
 convert (Matrix r c tda offset vec) = Matrix r c tda offset . G.convert $ vec
 {-# INLINE convert #-}
 
+-- | O(1) Extract a row
 takeRow :: G.Vector v a => Matrix v a -> Int -> v a
 takeRow (Matrix _ c tda offset vec) i = G.slice i' c vec
   where
     i' = offset + i * tda
 {-# INLINE takeRow #-}
 
+-- | O(m) Extract a column
 takeColumn :: G.Vector v a => Matrix v a -> Int -> v a
 takeColumn (Matrix r _ tda offset vec) j = G.create $ GM.new r >>= go idx vec r 0
   where
@@ -185,7 +204,7 @@ takeColumn (Matrix r _ tda offset vec) j = G.create $ GM.new r >>= go idx vec r 
     idx i = offset + i * tda + j
 {-# INLINE takeColumn #-}
 
--- | O(1) extract sub matrix
+-- | O(1) Extract sub matrix
 subMatrix :: G.Vector v a
           => (Int, Int)  -- ^ upper left corner of the submatrix
           -> (Int, Int)  -- ^ bottom right corner of the submatrix
@@ -199,17 +218,19 @@ subMatrix (i,j) (i',j') (Matrix _ n tda offset vec)
     offset' = offset + i * n + j
 {-# INLINE subMatrix #-}
 
+-- | O(m*n) Matrix transpose
 tr :: G.Vector v a => Matrix v a -> Matrix v a
 tr (Matrix r c tda offset vec) = fromVector (c,r) $ G.generate (r*c) f
   where
     f i = vec G.! (offset + i `mod` r * tda + i `div` r)
 {-# INLINE tr #-}
 
+-- | O(m*n) Create an identity matrix
 ident :: (Num a, G.Vector v a) => Int -> Matrix v a
 ident n = diagRect 0 (n,n) $ replicate n 1
 {-# INLINE ident #-}
 
--- | create a square matrix with given diagonal, other entries default to 0
+-- | O(m*n) Create a square matrix with given diagonal, other entries default to 0
 diag :: (Num a, G.Vector v a, F.Foldable t)
      => t a  -- ^ diagonal
      -> Matrix v a
@@ -217,7 +238,7 @@ diag d = diagRect 0 (n,n) d
   where n = length . F.toList $ d
 {-# INLINE diag #-}
 
--- | create a rectangular matrix with default values and given diagonal
+-- | O(m*n) Create a rectangular matrix with default values and given diagonal
 diagRect :: (G.Vector v a, F.Foldable t)
          => a         -- ^ default value
          -> (Int, Int)
