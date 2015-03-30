@@ -58,6 +58,10 @@ module Data.Matrix.Generic.Base
     , Data.Matrix.Generic.Base.forM
     , Data.Matrix.Generic.Base.forM_
 
+    -- * Monadic sequencing
+    , Data.Matrix.Generic.Base.sequence
+    , Data.Matrix.Generic.Base.sequence_
+
     , generate
 
     ) where
@@ -325,6 +329,16 @@ forM = flip Data.Matrix.Generic.Base.mapM
 forM_ :: (G.Vector v a, Monad m) => Matrix v a -> (a -> m b) -> m ()
 forM_ = flip Data.Matrix.Generic.Base.mapM_
 {-# INLINE forM_ #-}
+
+sequence :: (G.Vector v a, G.Vector v (m a), Monad m)
+         => Matrix v (m a) -> m (Matrix v a)
+sequence (Matrix r c tda offset vec) = liftM (Matrix r c tda offset) . G.sequence $ vec
+{-# INLINE sequence #-}
+
+sequence_ :: (G.Vector v (m a), Monad m)
+          => Matrix v (m a) -> m ()
+sequence_ (Matrix _ _ _ _ vec) = G.sequence_ vec
+{-# INLINE sequence_ #-}
 
 generate :: G.Vector v a => (Int, Int) -> ((Int, Int) -> a) -> Matrix v a
 generate (r,c) f = fromVector (r,c) . G.generate (r*c) $ \i -> f (i `div` c, i `mod` c)
