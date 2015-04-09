@@ -1,9 +1,9 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Data.Matrix.Sparse where
+module Data.Matrix.Sparse.Generic where
 
-import Data.Matrix.Class
+import Data.Matrix.Generic
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 import Data.Bits (shiftR)

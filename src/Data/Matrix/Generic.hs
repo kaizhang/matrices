@@ -1,255 +1,141 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Data.Matrix.Generic
-    ( 
-    -- * Immutable Matrix
-      Matrix(..)
-
-    -- * Accessors
-    -- ** length information
-    , C.dim
-    , C.rows
-    , C.cols
-
-    -- ** Indexing
-    , C.unsafeIndex
-    , (C.!)
-    , C.takeRow
-    , C.takeColumn
-    , C.takeDiag
-
-    -- * Construction
-    , C.unsafeFromVector
-    , C.fromVector
-    , C.matrix
-    , C.fromLists
-    , C.fromRows
-    , fromColumns
-    , C.empty
-
-    -- * Conversions
-    , C.flatten
-    , C.toRows
-    , C.toColumns
-    , C.toList
-    , C.toLists
-
-    -- * Different matrix types
-    , convert
-
-    , tr
-    , subMatrix
-    , ident
-    , diag
-    , diagRect
-    , fromBlocks
-    , isSymmetric
-    , force
-    
-    , Data.Matrix.Generic.foldl
-
-    -- * Mapping
-    , imap
-    , Data.Matrix.Generic.map
-    -- * Monadic mapping
-    , mapM
-    , mapM_
-    , forM
-    , forM_
-
-    -- * Monadic sequencing
-    , Data.Matrix.Generic.sequence
-    , Data.Matrix.Generic.sequence_
-
-    , generate
+    ( Matrix(..)
+    -- * Derived mothods
+    , rows
+    , cols
+    , (!)
+    , fromVector
+    , empty
+    , toList
+    , fromLists
+    , matrix
+    , fromRows
+    , toRows
+    , toColumns
+    , toLists
     ) where
 
-import Prelude hiding (mapM_, mapM)
-import qualified Data.Matrix.Class as C
 import qualified Data.Vector.Generic as G
-import Control.Arrow ((***), (&&&))
-import Control.Monad (liftM, foldM, foldM_)
-import qualified Data.Foldable as F
-import qualified Data.Vector.Generic.Mutable as GM
 
--- | row-major matrix supporting efficient slice
-data Matrix v a = Matrix !Int    -- number of rows
-                         !Int    -- number of cols
-                         !Int    -- physical row dimension
-                         !Int    -- offset
-                         !(v a)  -- flat matrix
-    deriving (Show)
+class G.Vector v a => Matrix m v a where
+    dim :: m v a -> (Int, Int)
 
-instance G.Vector v a => C.Matrix Matrix v a where
-    -- | O(1) Return the size of matrix.
-    dim (Matrix r c _ _ _) = (r,c)
-    {-# INLINE dim #-}
+    unsafeIndex :: m v a -> (Int, Int) -> a
 
-    -- | O(1) Unsafe indexing without bound check.
-    unsafeIndex (Matrix _ _ tda offset vec) (i,j) = vec `G.unsafeIndex` idx
+    unsafeFromVector :: (Int, Int) -> v a -> m v a
+
+    -- | Default algorithm is O((m*n) * O(unsafeIndex)).
+    flatten :: m v a -> v a
+    flatten mat = G.generate (r*c) $ \i -> unsafeIndex mat (i `div` c, i `mod` c)
       where
-        idx = offset + i * tda + j
-    {-# INLINE unsafeIndex #-}
-
-    -- | O(1) Create matrix from vector.
-    unsafeFromVector (r,c) = Matrix r c c 0
-    {-# INLINE unsafeFromVector #-}
-
-    -- | O(1) Extract a row.
-    takeRow (Matrix _ c tda offset vec) i = G.slice i' c vec
-      where
-        i' = offset + i * tda
-    {-# INLINE takeRow #-}
-
-    -- | Create a vector by concatenating rows.
-    flatten (Matrix r c tda offset vec)
-        | c == tda = G.slice offset (r*c) vec
-        | otherwise = G.generate (r*c) $ \i ->
-            vec `G.unsafeIndex` (offset + (i `div` c) * tda + (i `mod` c))
+        (r,c) = dim mat
     {-# INLINE flatten #-}
 
---reshape :: G.Vector v a => Matrix v a -> (Int, Int) -> Matrix v a
-
--- | O(m*n) Create matrix from columns
-fromColumns :: G.Vector v a => [v a] -> Matrix v a
-fromColumns = tr . C.fromRows
-{-# INLINE fromColumns #-}
-
----- | construct upper triangular matrix from vector
---upperTriangular :: (Num a, G.Vector v a) => Int -> v a -> Matrix v a
---upperTriangular n vec =
-
--- | O(m*n) Convert different matrix type
-convert :: (G.Vector v a, G.Vector w a) => Matrix v a -> Matrix w a
-convert (Matrix r c tda offset vec) = Matrix r c tda offset . G.convert $ vec
-{-# INLINE convert #-}
-
--- | O(1) Extract sub matrix
-subMatrix :: G.Vector v a
-          => (Int, Int)  -- ^ upper left corner of the submatrix
-          -> (Int, Int)  -- ^ bottom right corner of the submatrix
-          -> Matrix v a -> Matrix v a
-subMatrix (i,j) (i',j') (Matrix _ n tda offset vec)
-    | m' <= 0 || n' <= 0 = C.empty
-    | otherwise = Matrix m' n' tda offset' vec
-  where
-    m' = i' - i + 1
-    n' = j' - j + 1
-    offset' = offset + i * n + j
-{-# INLINE subMatrix #-}
-
--- | O(m*n) Matrix transpose
-tr :: G.Vector v a => Matrix v a -> Matrix v a
-tr (Matrix r c tda offset vec) = C.fromVector (c,r) $ G.generate (r*c) f
-  where
-    f i = vec G.! (offset + i `mod` r * tda + i `div` r)
-{-# INLINE tr #-}
-
--- | O(m*n) Create an identity matrix
-ident :: (Num a, G.Vector v a) => Int -> Matrix v a
-ident n = diagRect 0 (n,n) $ replicate n 1
-{-# INLINE ident #-}
-
--- | O(m*n) Create a square matrix with given diagonal, other entries default to 0
-diag :: (Num a, G.Vector v a, F.Foldable t)
-     => t a  -- ^ diagonal
-     -> Matrix v a
-diag d = diagRect 0 (n,n) d
-  where n = length . F.toList $ d
-{-# INLINE diag #-}
-
--- | O(m*n) Create a rectangular matrix with default values and given diagonal
-diagRect :: (G.Vector v a, F.Foldable t)
-         => a         -- ^ default value
-         -> (Int, Int)
-         -> t a       -- ^ diagonal
-         -> Matrix v a
-diagRect z0 (r,c) d = C.fromVector (r,c) $ G.create $ GM.replicate n z0 >>= go d c
-  where
-    go xs c' v = F.foldlM f 0 xs >> return v
+    -- | Extract a row. Default algorithm is O(n * O(unsafeIndex)).
+    takeRow :: m v a -> Int -> v a
+    takeRow mat i = G.generate c $ \j -> unsafeIndex mat (i,j)
       where
-        f !i x = GM.unsafeWrite v (i*(c'+1)) x >> return (i+1)
-    n = r * c
-{-# INLINE diagRect #-}
+        (_,c) = dim mat
+    {-# INLINE takeRow #-}
 
-fromBlocks :: G.Vector v a
-           => a               -- ^ default value
-           -> [[Matrix v a]]
-           -> Matrix v a
-fromBlocks d ms = C.fromVector (m,n) $ G.create $ GM.replicate (m*n) d >>= go n ms
-  where
-    go n' xss v = foldM_ f 0 xss >> return v
+    -- | Extract a column. Default algorithm is O(m * O(unsafeIndex)).
+    takeColumn :: m v a -> Int -> v a
+    takeColumn mat j = G.generate r $ \i -> unsafeIndex mat (i,j)
       where
-        f !cr xs = do (r', _) <- foldM g (0, 0) xs
-                      return $ cr + r'
-          where
-            g (!maxR, !cc) x = do
-                let (r,c) = C.dim x
-                    vec = C.flatten x
-                    step i u = do
-                        GM.unsafeWrite v ((cr + i `div` c) * n' + i `mod` c + cc) u
-                        return (i+1)
-                G.foldM'_ step (0::Int) vec
-                return (max maxR r, cc + c)
-    -- figure out the dimension of the new matrix
-    (m, n) = (sum *** maximum) . unzip . Prelude.map ((maximum *** sum) .
-                unzip . Prelude.map (C.rows &&& C.cols)) $ ms
-{-# INLINE fromBlocks #-}
+        (r,_) = dim mat
+    {-# INLINE takeColumn #-}
 
-isSymmetric :: (Eq a, G.Vector v a) => Matrix v a -> Bool
-isSymmetric m@(Matrix r c _ _ _) | r /= c = False
-                                 | otherwise = all f [0 .. r-1]
+    -- | Extract the diagonal. Default algorithm is O(min(m,n) * O(unsafeIndex)).
+    takeDiag :: m v a -> v a
+    takeDiag mat = G.generate n $ \i -> unsafeIndex mat (i,i)
+      where
+        n = uncurry min . dim $ mat
+    {-# INLINE takeDiag #-}
+
+    {-# MINIMAL dim, unsafeIndex, unsafeFromVector #-}
+
+-- | Derived methods
+
+-- | Return the number of rows
+rows :: Matrix m v a => m v a -> Int
+rows = fst . dim
+{-# INLINE rows #-}
+
+-- | Return the number of columns
+cols :: Matrix m v a => m v a -> Int
+cols = snd . dim
+{-# INLINE cols #-}
+
+-- | Indexing
+(!) :: Matrix m v a => m v a -> (Int, Int) -> a
+(!) mat (i,j) | i >= r || j >= c = error "Index out of bounds"
+              | otherwise = unsafeIndex mat (i,j)
   where
-    f i = all g [i + 1 .. c-1]
-      where g j = m C.! (i,j) == m C.! (j,i)
-{-# INLINE isSymmetric #-}
+    (r,c) = dim mat
+{-# INLINE (!) #-}
 
-force :: G.Vector v a => Matrix v a -> Matrix v a
-force m@(Matrix r c _ _ _) = C.fromVector (r,c) . G.force . C.flatten $ m
-{-# INLINE force #-}
+-- | O(m*n) Create a list by concatenating rows
+toList :: Matrix m v a => m v a -> [a]
+toList = G.toList . flatten
+{-# INLINE toList #-}
 
-imap :: (G.Vector v a, G.Vector v b) => ((Int, Int) -> a -> b) -> Matrix v a -> Matrix v b
-imap f m@(Matrix r c _ _ _) = C.fromVector (r,c) $ G.imap f' . C.flatten $ m
+empty :: Matrix m v a => m v a
+empty = fromVector (0,0) G.empty
+{-# INLINE empty #-}
+
+fromVector :: Matrix m v a => (Int, Int) -> v a -> m v a
+fromVector (r,c) vec | r*c /= G.length vec = error "incorrect length"
+                     | otherwise = unsafeFromVector (r,c) vec
+{-# INLINE fromVector #-}
+
+-- | O(m*n) Matrix construction
+matrix :: Matrix m v a
+       => Int  -- ^ number of columns
+       -> [a]  -- ^ row list
+       -> m v a
+matrix ncol xs | n `mod` ncol /= 0 = error "incorrect length"
+               | otherwise = unsafeFromVector (nrow,ncol) vec
   where
-    f' i = f (i `div` c, i `mod` c)
-{-# INLINE imap #-}
+    vec = G.fromList xs
+    nrow = n `div` ncol
+    n = G.length vec
+{-# INLINE matrix #-}
 
-map :: (G.Vector v a, G.Vector v b) => (a -> b) -> Matrix v a -> Matrix v b
-map f m@(Matrix r c _ _ _) = C.fromVector (r,c) $ G.map f . C.flatten $ m
-{-# INLINE map #-}
+-- | O(m*n) Create matrix from list of lists, it doesn't check if the list of
+-- list is a valid matrix
+fromLists :: Matrix m v a => [[a]] -> m v a
+fromLists xs | null xs = empty
+             | otherwise = fromVector (r,c) . G.fromList . concat $ xs
+  where
+    r = length xs
+    c = length . head $ xs
+{-# INLINE fromLists #-}
 
-foldl :: G.Vector v b => (a -> b -> a) -> a -> Matrix v b -> a
-foldl f acc m = G.foldl f acc . C.flatten $ m
-{-# INLINE foldl #-}
+-- | O(m*n) Create matrix from rows
+fromRows :: Matrix m v a => [v a] -> m v a
+fromRows xs | null xs = empty
+            | otherwise = fromVector (r,c) . G.concat $ xs
+  where
+    r = length xs
+    c = G.length . head $ xs
+{-# INLINE fromRows #-}
 
-mapM :: (G.Vector v a, G.Vector v b, Monad m) => (a -> m b) -> Matrix v a -> m (Matrix v b)
-mapM f m@(Matrix r c _ _ _) = liftM (C.fromVector (r,c)) . G.mapM f . C.flatten $ m
-{-# INLINE mapM #-}
+-- | O(m) Return the rows
+toRows :: Matrix m v a => m v a -> [v a]
+toRows mat = map (takeRow mat) [0..r-1]
+  where
+    (r,_) = dim mat
+{-# INLINE toRows #-}
 
-mapM_ :: (G.Vector v a, Monad m) => (a -> m b) -> Matrix v a -> m ()
-mapM_ f = G.mapM_ f . C.flatten
-{-# INLINE mapM_ #-}
+-- | O(m*n) Return the columns
+toColumns :: Matrix m v a => m v a -> [v a]
+toColumns mat = map (takeColumn mat) [0..c-1]
+  where
+    (_,c) = dim mat
+{-# INLINE toColumns #-}
 
-forM :: (G.Vector v a, G.Vector v b, Monad m) => Matrix v a -> (a -> m b) -> m (Matrix v b)
-forM = flip mapM
-{-# INLINE forM #-}
-
-forM_ :: (G.Vector v a, Monad m) => Matrix v a -> (a -> m b) -> m ()
-forM_ = flip mapM_
-{-# INLINE forM_ #-}
-
-sequence :: (G.Vector v a, G.Vector v (m a), Monad m)
-         => Matrix v (m a) -> m (Matrix v a)
-sequence (Matrix r c tda offset vec) = liftM (Matrix r c tda offset) . G.sequence $ vec
-{-# INLINE sequence #-}
-
-sequence_ :: (G.Vector v (m a), Monad m)
-          => Matrix v (m a) -> m ()
-sequence_ (Matrix _ _ _ _ vec) = G.sequence_ vec
-{-# INLINE sequence_ #-}
-
-generate :: G.Vector v a => (Int, Int) -> ((Int, Int) -> a) -> Matrix v a
-generate (r,c) f = C.fromVector (r,c) . G.generate (r*c) $ \i -> f (i `div` c, i `mod` c)
-{-# INLINE generate #-}
+-- | O(m*n) List of lists
+toLists :: Matrix m v a => m v a -> [[a]]
+toLists = map G.toList . toRows
+{-# INLINE toLists #-}

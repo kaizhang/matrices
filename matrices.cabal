@@ -22,15 +22,15 @@ library
   exposed-modules:
     Data.Matrix
     Data.Matrix.Mutable
-    Data.Matrix.Class
-    Data.Matrix.Class.Mutable
-    Data.Matrix.Generic
-    Data.Matrix.Generic.Mutable
     Data.Matrix.Storable
     Data.Matrix.Storable.Mutable
     Data.Matrix.Unboxed
     Data.Matrix.Unboxed.Mutable
-    Data.Matrix.Sparse
+    Data.Matrix.Generic
+    Data.Matrix.Generic.Mutable
+    Data.Matrix.Dense.Generic
+    Data.Matrix.Dense.Generic.Mutable
+    Data.Matrix.Sparse.Generic
 
   ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
 
