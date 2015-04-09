@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                matrices
-version:             0.3.2
+version:             0.4.0
 synopsis:            native matrix based on vector
 description:         This library provide the APIs for creating, indexing,
                      modifying matrices (2d arrays). The underling data
@@ -20,16 +20,17 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:
-      Data.Matrix
-    , Data.Matrix.Mutable
-    , Data.Matrix.Generic
-    , Data.Matrix.Generic.Mutable
-    , Data.Matrix.Generic.Base
-    , Data.Matrix.Generic.Types
-    , Data.Matrix.Storable
-    , Data.Matrix.Storable.Mutable
-    , Data.Matrix.Unboxed
-    , Data.Matrix.Unboxed.Mutable
+    Data.Matrix
+    Data.Matrix.Mutable
+    Data.Matrix.Class
+    Data.Matrix.Class.Mutable
+    Data.Matrix.Generic
+    Data.Matrix.Generic.Mutable
+    Data.Matrix.Storable
+    Data.Matrix.Storable.Mutable
+    Data.Matrix.Unboxed
+    Data.Matrix.Unboxed.Mutable
+    Data.Matrix.Sparse
 
   ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
 

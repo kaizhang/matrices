@@ -1,10 +1,10 @@
 module Data.Matrix.Storable
     ( Matrix
-    , module Data.Matrix.Generic.Base
+    , module Data.Matrix.Generic
     ) where
 
-import qualified Data.Matrix.Generic.Types as MG
-import Data.Matrix.Generic.Base
-import qualified Data.Vector.Storable as S
+import qualified Data.Matrix.Generic as MG
+import Data.Matrix.Generic hiding (Matrix)
+import qualified Data.Vector.Storable as V
 
-type Matrix a = MG.Matrix S.Vector a
+type Matrix a = MG.Matrix V.Vector a

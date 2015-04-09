@@ -64,7 +64,7 @@ putGeneric (Matrix r c tda offset vec) = do
     put vec
 
 -- | mutable matrix
-data MMatrix v m a = MMatrix !Int !Int !Int !Int !(v m a)
+data MMatrix v s a = MMatrix !Int !Int !Int !Int !(v s a)
 
 instance (G.Vector v a, Show a) => Show (Matrix v a) where
     show mat = unlines . map (unwords . map show) . toLists $ mat

@@ -3,8 +3,8 @@ module Data.Matrix.Unboxed.Mutable
     , module Data.Matrix.Generic.Mutable
     ) where
 
-import qualified Data.Matrix.Generic.Types as MG
-import Data.Matrix.Generic.Mutable
-import qualified Data.Vector.Unboxed.Mutable as UM
+import qualified Data.Matrix.Generic.Mutable as MG
+import Data.Matrix.Generic.Mutable hiding (MMatrix)
+import qualified Data.Vector.Unboxed.Mutable as VM
 
-type MMatrix a = MG.MMatrix UM.MVector a
+type MMatrix a = MG.MMatrix VM.MVector a
