@@ -1,11 +1,22 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Data.Matrix.Sparse.Generic where
+module Data.Matrix.Sparse.Generic
+    ( Zero(..)
+    , CSR(..)
+    , fromAscAL
+    , fromAscStream
+    , (!)
+    ) where
 
+import Control.Monad (when, forM_)
+import Control.Monad.ST (runST)
 import Data.Matrix.Generic
 import qualified Data.Vector.Generic as G
+import qualified Data.Vector.Generic.Mutable as GM
 import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector.Fusion.Stream as S
 import Data.Bits (shiftR)
 
 class Eq a => Zero a where
@@ -55,6 +66,39 @@ instance (Zero a, G.Vector v a) => Matrix CSR v a where
         g ((a, _), xs) | a == 0 = 0 : xs
                        | otherwise = replicate (a+1) 0 ++ xs
         n = U.length nz
+    {-# INLINE unsafeFromVector #-}
+
+type AssocList a = [((Int, Int), a)]
+
+fromAscAL :: G.Vector v a => (Int, Int) -> Int -> AssocList a -> CSR v a
+fromAscAL (r,c) n al = fromAscStream (r,c) n . S.fromList $ al
+{-# INLINE fromAscAL #-}
+
+fromAscStream :: (GM.MVector (G.Mutable v) a, G.Vector v a) => (Int, Int) -> Int -> S.Stream ((Int,Int),a) -> CSR v a
+fromAscStream (r,c) n al = CSR r c values ci rp
+  where
+    (values, ci, rp) = runST $ do
+        v <- GM.new n
+        col <- GM.new n
+        row <- GM.new (r+1)
+
+        let f (i',acc) ((i,j),x) = do
+                GM.write v acc x
+                GM.write col acc j
+
+                let stride = i - i'
+                when (stride > 0) $ forM_ [0..stride-1] $ \s -> GM.write row (i-s) acc
+                
+                return (i,acc+1)
+
+        _ <- S.foldM f (0,0) al
+        GM.write row r n
+
+        v' <- G.unsafeFreeze v
+        col' <- G.unsafeFreeze col
+        row' <- G.unsafeFreeze row
+        return (v', col', row')
+{-# INLINE fromAscStream #-}
     
 binarySearchByBounds :: U.Vector Int -> Int -> Int -> Int -> Maybe Int
 binarySearchByBounds vec x = loop
@@ -67,4 +111,4 @@ binarySearchByBounds vec x = loop
       where
         k = (u+l) `shiftR` 1
         x' = vec `U.unsafeIndex` k
-
+{-# INLINE binarySearchByBounds #-}

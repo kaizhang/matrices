@@ -5,14 +5,14 @@ name:                matrices
 version:             0.4.0
 synopsis:            native matrix based on vector
 description:         This library provide the APIs for creating, indexing,
-                     modifying matrices (2d arrays). The underling data
-                     structure is vector. It's not intended to be a linear
-                     algebra library.
+                     modifying matrices (2d arrays), including dense and
+                     sparse representations. The underling data
+                     structure is vectors.
 license:             BSD3
 license-file:        LICENSE
 author:              Kai Zhang
 maintainer:          kai@kzhang.org
-copyright:           (c) 2014 Kai Zhang
+copyright:           (c) 2015 Kai Zhang
 category:            Data
 build-type:          Simple
 -- extra-source-files:
