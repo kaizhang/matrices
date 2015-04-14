@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
 module Data.Matrix.Dense.Generic
     ( 
     -- * Immutable Matrix
@@ -64,6 +65,12 @@ module Data.Matrix.Dense.Generic
     , Data.Matrix.Dense.Generic.sequence_
 
     , generate
+
+    -- * Mutable matrix
+    , MG.thaw
+    , MG.unsafeThaw
+    , MG.freeze
+    , MG.unsafeFreeze
     ) where
 
 import Prelude hiding (mapM_, mapM)
@@ -74,6 +81,9 @@ import qualified Data.Foldable as F
 import qualified Data.Vector.Generic.Mutable as GM
 
 import qualified Data.Matrix.Generic as MG
+import Data.Matrix.Dense.Generic.Mutable (MMatrix(..))
+
+type instance MG.Mutable Matrix = MMatrix
 
 -- | row-major matrix supporting efficient slice
 data Matrix v a = Matrix !Int    -- number of rows
@@ -82,6 +92,7 @@ data Matrix v a = Matrix !Int    -- number of rows
                          !Int    -- offset
                          !(v a)  -- flat matrix
     deriving (Show)
+
 
 instance G.Vector v a => MG.Matrix Matrix v a where
     -- | O(1) Return the size of matrix.
@@ -110,6 +121,18 @@ instance G.Vector v a => MG.Matrix Matrix v a where
         | otherwise = G.generate (r*c) $ \i ->
             vec `G.unsafeIndex` (offset + (i `div` c) * tda + (i `mod` c))
     {-# INLINE flatten #-}
+
+    thaw (Matrix r c tda offset v) = MMatrix r c tda offset `liftM` G.thaw v
+    {-# INLINE thaw #-}
+
+    unsafeThaw (Matrix r c tda offset v) = MMatrix r c tda offset `liftM` G.unsafeThaw v
+    {-# INLINE unsafeThaw #-}
+
+    freeze (MMatrix r c tda offset v) = Matrix r c tda offset `liftM` G.freeze v
+    {-# INLINE freeze #-}
+
+    unsafeFreeze (MMatrix r c tda offset v) = Matrix r c tda offset `liftM` G.unsafeFreeze v
+    {-# INLINE unsafeFreeze #-}
 
 --reshape :: G.Vector v a => Matrix v a -> (Int, Int) -> Matrix v a
 

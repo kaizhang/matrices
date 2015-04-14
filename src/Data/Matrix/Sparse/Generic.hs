@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
 module Data.Matrix.Sparse.Generic
     ( Zero(..)
     , CSR(..)
@@ -19,6 +20,7 @@ import qualified Data.Vector.Fusion.Stream as S
 import Data.Bits (shiftR)
 
 import Data.Matrix.Generic
+import Data.Matrix.Dense.Generic.Mutable (MMatrix)
 
 class Eq a => Zero a where
     zero :: a
@@ -31,6 +33,9 @@ instance Zero Double where
 
 instance Eq a => Zero ([] a) where
     zero = []
+
+-- | mutable sparse matrix not implemented
+type instance Mutable CSR = MMatrix
 
 -- | Compressed Sparse Row (CSR) matrix
 data CSR v a = CSR !Int  -- rows
@@ -68,6 +73,11 @@ instance (Zero a, G.Vector v a) => Matrix CSR v a where
                        | otherwise = replicate (a+1) 0 ++ xs
         n = U.length nz
     {-# INLINE unsafeFromVector #-}
+
+    thaw = undefined
+    unsafeThaw = undefined
+    freeze = undefined
+    unsafeFreeze = undefined
 
 type AssocList a = [((Int, Int), a)]
 

@@ -1,8 +1,11 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE Rank2Types #-}
 module Data.Matrix.Generic
-    ( Matrix(..)
+    ( Mutable
+    , Matrix(..)
+
     -- * Derived mothods
     , rows
     , cols
@@ -16,17 +19,18 @@ module Data.Matrix.Generic
     , toRows
     , toColumns
     , toLists
+    , create
     ) where
 
-import Control.Monad.Primitive
+import Control.Monad.ST (runST, ST)
+import Control.Monad.Primitive (PrimMonad, PrimState)
 import qualified Data.Vector.Generic as G
-import qualified Data.Vector.Generic.Mutable as GM
 
 import qualified Data.Matrix.Generic.Mutable as MM
 
 type family Mutable (m :: (* -> *) -> * -> *) :: (* -> * -> *) -> * -> * -> *
 
-class (GM.MVector (G.Mutable v) a, MM.MMatrix (Mutable m) (G.Mutable v) a, G.Vector v a) => Matrix m v a where
+class (MM.MMatrix (Mutable m) (G.Mutable v) a, G.Vector v a) => Matrix m v a where
     dim :: m v a -> (Int, Int)
 
     unsafeIndex :: m v a -> (Int, Int) -> a
@@ -61,13 +65,18 @@ class (GM.MVector (G.Mutable v) a, MM.MMatrix (Mutable m) (G.Mutable v) a, G.Vec
         n = uncurry min . dim $ mat
     {-# INLINE takeDiag #-}
 
-    {-# MINIMAL dim, unsafeIndex, unsafeFromVector #-}
+    thaw :: PrimMonad s => m v a -> s ((Mutable m) (G.Mutable v) (PrimState s) a)
 
-    thaw :: (G.Vector v a, PrimMonad s, GM.MVector v' a, MM.MMatrix m' v' a, v' ~ G.Mutable v, m' ~ Mutable m)
-         => m v a -> s (m' v' (PrimState s) a)
-    thaw mat = do vec <- G.thaw $ flatten mat
-                  return $ MM.fromMVector (dim mat) vec
---    thaw (Matrix r c tda offset v) = MMatrix r c tda offset <$> G.thaw v
+    unsafeThaw :: PrimMonad s
+               => m v a -> s ((Mutable m) (G.Mutable v) (PrimState s) a)
+
+    freeze :: PrimMonad s
+           => (Mutable m) (G.Mutable v) (PrimState s) a -> s (m v a)
+
+    unsafeFreeze :: PrimMonad s
+                 => (Mutable m) (G.Mutable v) (PrimState s) a -> s (m v a)
+
+    {-# MINIMAL dim, unsafeIndex, unsafeFromVector, thaw, unsafeThaw, freeze, unsafeFreeze #-}
 
 -- | Derived methods
 
@@ -153,3 +162,7 @@ toColumns mat = map (takeColumn mat) [0..c-1]
 toLists :: Matrix m v a => m v a -> [[a]]
 toLists = map G.toList . toRows
 {-# INLINE toLists #-}
+
+create :: Matrix m v a => (forall s . ST s ((Mutable m) (G.Mutable v) s a)) -> m v a
+create m = runST $ unsafeFreeze =<< m
+{-# INLINE create #-}
