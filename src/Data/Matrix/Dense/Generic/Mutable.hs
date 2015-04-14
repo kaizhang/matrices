@@ -12,12 +12,12 @@ module Data.Matrix.Dense.Generic.Mutable
    , unsafeThaw
    , freeze
    , unsafeFreeze
-   , write
+   , C.write
    , C.unsafeWrite
-   , read
+   , C.read
    , C.unsafeRead
    , replicate
-   , new
+   , C.new
    , create
    ) where
 
@@ -58,6 +58,7 @@ instance GM.MVector v a => C.MMatrix MMatrix v a where
     unsafeWrite (MMatrix _ _ tda offset v) (i,j) = GM.unsafeWrite v idx
       where idx = offset + i * tda + j
     {-# INLINE unsafeWrite #-}
+    
 
 -- to be removed in GHC-7.10
 (<$>) :: Monad m => (a -> b) -> m a -> m b
@@ -69,10 +70,6 @@ takeRow (MMatrix _ c tda offset vec) i = GM.slice i' c vec
     i' = offset + i * tda
 {-# INLINE takeRow #-}
 
-thaw :: (G.Vector v a, PrimMonad m)
-     => Matrix v a -> m (MMatrix (G.Mutable v) (PrimState m) a)
-thaw (Matrix r c tda offset v) = MMatrix r c tda offset <$> G.thaw v
-{-# INLINE thaw #-}
 
 unsafeThaw :: (G.Vector v a, PrimMonad m)
            => Matrix v a -> m (MMatrix (G.Mutable v) (PrimState m) a)
@@ -87,27 +84,10 @@ unsafeFreeze :: (PrimMonad m, G.Vector v a) => MMatrix (G.Mutable v) (PrimState 
 unsafeFreeze (MMatrix r c tda offset v) = Matrix r c tda offset <$> G.unsafeFreeze v
 {-# INLINE unsafeFreeze #-}
 
-write :: (PrimMonad m, GM.MVector v a)
-      => MMatrix v (PrimState m) a -> (Int, Int) -> a -> m ()
-write (MMatrix _ _ tda offset v) (i,j) = GM.write v idx
-  where idx = offset + i * tda + j
-{-# INLINE write #-}
-
-read :: (PrimMonad m, GM.MVector v a)
-     => MMatrix v (PrimState m) a -> (Int, Int) -> m a
-read (MMatrix _ _ tda offset v) (i,j) = GM.read v idx
-  where idx = offset + i * tda + j
-{-# INLINE read #-}
-
 replicate :: (PrimMonad m, GM.MVector v a)
           => (Int, Int) -> a -> m (MMatrix v (PrimState m) a)
 replicate (r,c) x = C.fromMVector (r,c) <$> GM.replicate (r*c) x
 {-# INLINE replicate #-}
-
-new :: (PrimMonad m, GM.MVector v a)
-    => (Int, Int) -> m (MMatrix v (PrimState m) a)
-new (r,c) = C.fromMVector (r,c) <$> GM.new (r*c)
-{-# INLINE new #-}
 
 create :: G.Vector v a => (forall s . ST s (MMatrix (G.Mutable v) s a)) -> Matrix v a
 create m = runST $ unsafeFreeze =<< m

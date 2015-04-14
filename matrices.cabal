@@ -30,7 +30,7 @@ library
     Data.Matrix.Generic.Mutable
     Data.Matrix.Dense.Generic
     Data.Matrix.Dense.Generic.Mutable
-    Data.Matrix.Sparse.Generic
+--    Data.Matrix.Sparse.Generic
 
   ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
 

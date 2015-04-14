@@ -12,12 +12,13 @@ module Data.Matrix.Sparse.Generic
 
 import Control.Monad (when, forM_)
 import Control.Monad.ST (runST)
-import Data.Matrix.Generic
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as GM
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Fusion.Stream as S
 import Data.Bits (shiftR)
+
+import Data.Matrix.Generic
 
 class Eq a => Zero a where
     zero :: a

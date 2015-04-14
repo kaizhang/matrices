@@ -1,4 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
 module Data.Matrix.Generic
     ( Matrix(..)
     -- * Derived mothods
@@ -16,9 +18,15 @@ module Data.Matrix.Generic
     , toLists
     ) where
 
+import Control.Monad.Primitive
 import qualified Data.Vector.Generic as G
+import qualified Data.Vector.Generic.Mutable as GM
 
-class G.Vector v a => Matrix m v a where
+import qualified Data.Matrix.Generic.Mutable as MM
+
+type family Mutable (m :: (* -> *) -> * -> *) :: (* -> * -> *) -> * -> * -> *
+
+class (GM.MVector (G.Mutable v) a, MM.MMatrix (Mutable m) (G.Mutable v) a, G.Vector v a) => Matrix m v a where
     dim :: m v a -> (Int, Int)
 
     unsafeIndex :: m v a -> (Int, Int) -> a
@@ -54,6 +62,12 @@ class G.Vector v a => Matrix m v a where
     {-# INLINE takeDiag #-}
 
     {-# MINIMAL dim, unsafeIndex, unsafeFromVector #-}
+
+    thaw :: (G.Vector v a, PrimMonad s, GM.MVector v' a, MM.MMatrix m' v' a, v' ~ G.Mutable v, m' ~ Mutable m)
+         => m v a -> s (m' v' (PrimState s) a)
+    thaw mat = do vec <- G.thaw $ flatten mat
+                  return $ MM.fromMVector (dim mat) vec
+--    thaw (Matrix r c tda offset v) = MMatrix r c tda offset <$> G.thaw v
 
 -- | Derived methods
 
