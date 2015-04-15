@@ -41,6 +41,6 @@ instance GM.MVector v a => C.MMatrix SymMMatrix v a where
 
 -- row major upper triangular indexing
 idx :: Int -> Int -> Int -> Int
-idx n i j | i <= j = (i * (2 * n - i - 3)) `shiftR` 1 + j - 1
-          | otherwise = (j * (2 * n - j - 3)) `shiftR` 1 + i - 1
+idx n i j | i <= j = (i * (2 * n - i - 1)) `shiftR` 1 + j
+          | otherwise = (j * (2 * n - j - 1)) `shiftR` 1 + i
 {-# INLINE idx #-}
