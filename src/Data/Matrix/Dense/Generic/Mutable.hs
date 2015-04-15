@@ -34,10 +34,10 @@ instance GM.MVector v a => C.MMatrix MMatrix v a where
       where idx = offset + i * tda + j
     {-# INLINE unsafeWrite #-}
 
-    new (r,c) = MMatrix r c 0 0 `liftM` GM.new (r*c)
+    new (r,c) = MMatrix r c c 0 `liftM` GM.new (r*c)
     {-# INLINE new #-}
 
-    replicate (r,c) x = MMatrix r c 0 0 `liftM` GM.replicate (r*c) x
+    replicate (r,c) x = MMatrix r c c 0 `liftM` GM.replicate (r*c) x
     {-# INLINE replicate #-}
     
 takeRow :: GM.MVector v a => MMatrix v m a -> Int -> v m a
