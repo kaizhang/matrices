@@ -71,6 +71,7 @@ module Data.Matrix.Dense.Generic
     , MG.unsafeThaw
     , MG.freeze
     , MG.unsafeFreeze
+    , MG.create
     ) where
 
 import Prelude hiding (mapM_, mapM)

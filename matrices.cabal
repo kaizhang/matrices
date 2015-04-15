@@ -31,6 +31,8 @@ library
     Data.Matrix.Dense.Generic
     Data.Matrix.Dense.Generic.Mutable
     Data.Matrix.Sparse.Generic
+    Data.Matrix.Symmetric
+    Data.Matrix.Symmetric.Mutable
 
   ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
 

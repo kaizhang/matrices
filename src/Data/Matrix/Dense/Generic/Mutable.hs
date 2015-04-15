@@ -10,6 +10,7 @@ module Data.Matrix.Dense.Generic.Mutable
    , C.read
    , C.unsafeRead
    , C.new
+   , C.replicate
    ) where
 
 import Prelude hiding (read, replicate)
@@ -35,6 +36,9 @@ instance GM.MVector v a => C.MMatrix MMatrix v a where
 
     new (r,c) = MMatrix r c 0 0 `liftM` GM.new (r*c)
     {-# INLINE new #-}
+
+    replicate (r,c) x = MMatrix r c 0 0 `liftM` GM.replicate (r*c) x
+    {-# INLINE replicate #-}
     
 takeRow :: GM.MVector v a => MMatrix v m a -> Int -> v m a
 takeRow (MMatrix _ c tda offset vec) i = GM.slice i' c vec

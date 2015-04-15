@@ -21,7 +21,9 @@ class GM.MVector v a => MMatrix m v a where
     -- | Create a mutable matrix without initialization
     new :: PrimMonad s => (Int, Int) -> s (m v (PrimState s) a)
 
-    {-# MINIMAL dim, unsafeRead, unsafeWrite, new #-}
+    replicate :: PrimMonad s => (Int, Int) -> a -> s (m v (PrimState s) a)
+
+    {-# MINIMAL dim, unsafeRead, unsafeWrite, new, replicate #-}
 
 -- | Derived methods
 

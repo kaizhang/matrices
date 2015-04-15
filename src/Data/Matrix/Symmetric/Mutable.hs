@@ -9,6 +9,7 @@ module Data.Matrix.Symmetric.Mutable
    , C.read
    , C.unsafeRead
    , C.new
+   , C.replicate
    ) where
 
 import Prelude hiding (read, replicate)
@@ -33,6 +34,10 @@ instance GM.MVector v a => C.MMatrix SymMMatrix v a where
 
     new (r,c) | r /= c = error "colmumns /= rows"
               | otherwise = SymMMatrix r `liftM` GM.new ((r*(r+1)) `shiftR` 1)
+
+    replicate (r,c) x
+        | r /= c = error "colmumns /= rows"
+        | otherwise = SymMMatrix r `liftM` GM.replicate ((r*(r+1)) `shiftR` 1) x
 
 -- row major upper triangular indexing
 idx :: Int -> Int -> Int -> Int

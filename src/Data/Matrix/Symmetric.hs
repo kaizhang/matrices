@@ -3,6 +3,17 @@
 {-# LANGUAGE TypeFamilies #-}
 module Data.Matrix.Symmetric
     ( SymMatrix(..)
+    , dim
+    , unsafeIndex
+    , (!)
+    , flatten
+    , unsafeFromVector
+    , fromVector
+    , takeRow
+    , thaw
+    , unsafeThaw
+    , freeze
+    , unsafeFreeze
     ) where
 
 import Control.Monad (liftM)
