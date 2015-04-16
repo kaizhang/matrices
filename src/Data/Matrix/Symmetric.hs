@@ -1,9 +1,12 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 module Data.Matrix.Symmetric
     ( SymMatrix(..)
     , dim
+    , rows
+    , cols
     , unsafeIndex
     , (!)
     , flatten
@@ -14,8 +17,11 @@ module Data.Matrix.Symmetric
     , unsafeThaw
     , freeze
     , unsafeFreeze
+    , zip
+    , zipWith
     ) where
 
+import Prelude hiding (zip, zipWith)
 import Control.Monad (liftM)
 import Data.Bits (shiftR)
 import qualified Data.Vector.Generic as G
@@ -60,3 +66,17 @@ idx :: Int -> Int -> Int -> Int
 idx n i j | i <= j = (i * (2 * n - i - 1)) `shiftR` 1 + j
           | otherwise = (j * (2 * n - j - 1)) `shiftR` 1 + i
 {-# INLINE idx #-}
+
+zip :: (G.Vector v a, G.Vector v b, G.Vector v (a,b))
+    => SymMatrix v a -> SymMatrix v b -> SymMatrix v (a,b)
+zip (SymMatrix n1 v1) (SymMatrix n2 v2)
+    | n1 /= n2 = error "imcompatible size"
+    | otherwise = SymMatrix n1 $ G.zip v1 v2
+{-# INLINE zip #-}
+
+zipWith :: (G.Vector v a, G.Vector v b, G.Vector v c)
+        => (a -> b -> c) -> SymMatrix v a -> SymMatrix v b -> SymMatrix v c
+zipWith f (SymMatrix n1 v1) (SymMatrix n2 v2)
+    | n1 /= n2 = error "imcompatible size"
+    | otherwise = SymMatrix n1 . G.zipWith f v1 $ v2
+{-# INLINE zipWith #-}
