@@ -42,7 +42,6 @@ library
       base >=4.0 && <5
     , binary
     , vector >=0.9
-    , vector-binary-instances
     , primitive
 
   hs-source-dirs:      src

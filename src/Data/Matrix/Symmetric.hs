@@ -24,16 +24,30 @@ module Data.Matrix.Symmetric
 import Prelude hiding (zip, zipWith)
 import Control.Monad (liftM)
 import Data.Bits (shiftR)
+import Data.Binary
 import qualified Data.Vector.Generic as G
 
 import Data.Matrix.Generic
 import Data.Matrix.Symmetric.Mutable (SymMMatrix(..))
 
+type instance Mutable SymMatrix = SymMMatrix
+
 -- | Symmetric square matrix
 data SymMatrix v a = SymMatrix !Int !(v a)
     deriving (Show)
 
-type instance Mutable SymMatrix = SymMMatrix
+instance (G.Vector v a, Binary a) => Binary (SymMatrix v a) where
+    put (SymMatrix n vec) = do put (52 :: Int)
+                               put n
+                               G.mapM_ put vec
+    get = do
+        magic <- get :: Get Int
+        if magic == 52
+           then do
+               n <- get 
+               vec <- G.replicateM ((n+1)*n `shiftR` 1) get
+               return $ SymMatrix n vec
+           else error "not a valid file"
 
 instance G.Vector v a => Matrix SymMatrix v a where
     dim (SymMatrix n _) = (n,n)
