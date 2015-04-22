@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE BangPatterns #-}
 module Data.Matrix.Symmetric
     ( SymMatrix(..)
     , dim
@@ -17,6 +18,8 @@ module Data.Matrix.Symmetric
     , unsafeThaw
     , freeze
     , unsafeFreeze
+    , Data.Matrix.Symmetric.map
+    , imap
     , zip
     , zipWith
     ) where
@@ -28,7 +31,7 @@ import Data.Binary
 import qualified Data.Vector.Generic as G
 
 import Data.Matrix.Generic
-import Data.Matrix.Symmetric.Mutable (SymMMatrix(..))
+import Data.Matrix.Symmetric.Mutable (SymMMatrix(..), unsafeWrite, new)
 
 type instance Mutable SymMatrix = SymMMatrix
 
@@ -45,7 +48,7 @@ instance (G.Vector v a, Binary a) => Binary (SymMatrix v a) where
         if magic == 52
            then do
                n <- get 
-               vec <- G.replicateM ((n+1)*n `shiftR` 1) get
+               vec <- G.replicateM (((n+1)*n) `shiftR` 1) get
                return $ SymMatrix n vec
            else error "not a valid file"
 
@@ -57,7 +60,7 @@ instance G.Vector v a => Matrix SymMatrix v a where
     {-# INLINE unsafeIndex #-}
 
     unsafeFromVector (r,c) vec | r /= c = error "columns /= rows"
-                               | otherwise = SymMatrix r . G.concat . map f $ [0..r-1]
+                               | otherwise = SymMatrix r . G.concat . Prelude.map f $ [0..r-1]
       where
         f i = G.slice (i*(c+1)) (c-i) vec
 --        n = ((r+1)*r) `shiftR` 1
@@ -75,11 +78,26 @@ instance G.Vector v a => Matrix SymMatrix v a where
     unsafeFreeze (SymMMatrix n v) = SymMatrix n `liftM` G.unsafeFreeze v
     {-# INLINE unsafeFreeze #-}
 
--- row major upper triangular indexing
-idx :: Int -> Int -> Int -> Int
-idx n i j | i <= j = (i * (2 * n - i - 1)) `shiftR` 1 + j
-          | otherwise = (j * (2 * n - j - 1)) `shiftR` 1 + i
-{-# INLINE idx #-}
+map :: (G.Vector v a, G.Vector v b) => (a -> b) -> SymMatrix v a -> SymMatrix v b
+map f (SymMatrix n vec) = SymMatrix n $ G.map f vec
+{-# INLINE map #-}
+
+-- | Upper triangular imap, i.e., i <= j
+imap :: (G.Vector v a, G.Vector v b) => ((Int, Int) -> a -> b) -> SymMatrix v a -> SymMatrix v b
+imap f mat = create $ do
+    mat' <- new (n,n)
+    let loop m !i !j
+            | i >= n = return ()
+            | j >= n = loop m (i+1) (i+1)
+            | otherwise = unsafeWrite m (i,j) (f (i,j) x) >>
+                          loop m i (j+1)
+          where
+            x = unsafeIndex mat (i,j)
+    loop mat' 0 0
+    return mat'
+  where
+    n = rows mat
+{-# INLINE imap #-}
 
 zip :: (G.Vector v a, G.Vector v b, G.Vector v (a,b))
     => SymMatrix v a -> SymMatrix v b -> SymMatrix v (a,b)
@@ -94,3 +112,12 @@ zipWith f (SymMatrix n1 v1) (SymMatrix n2 v2)
     | n1 /= n2 = error "imcompatible size"
     | otherwise = SymMatrix n1 . G.zipWith f v1 $ v2
 {-# INLINE zipWith #-}
+
+
+-- helper
+
+-- row major upper triangular indexing
+idx :: Int -> Int -> Int -> Int
+idx n i j | i <= j = (i * (2 * n - i - 1)) `shiftR` 1 + j
+          | otherwise = (j * (2 * n - j - 1)) `shiftR` 1 + i
+{-# INLINE idx #-}
