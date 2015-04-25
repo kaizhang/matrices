@@ -61,3 +61,18 @@ benchmark benchmarks
 source-repository head
   type: git
   location: https://github.com/kaizhang/matrices.git
+
+test-suite test
+  type: exitcode-stdio-1.0
+  hs-source-dirs: tests
+  main-is: test.hs
+  other-modules:
+
+  default-language:    Haskell2010
+  build-depends: 
+      base
+    , matrices
+    , vector
+    , tasty
+    , tasty-hunit
+    , tasty-quickcheck

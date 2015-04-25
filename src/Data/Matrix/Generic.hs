@@ -11,6 +11,7 @@ module Data.Matrix.Generic
     , cols
     , (!)
     , fromVector
+    , fromList
     , empty
     , toList
     , fromLists
@@ -111,6 +112,10 @@ fromVector :: Matrix m v a => (Int, Int) -> v a -> m v a
 fromVector (r,c) vec | r*c /= G.length vec = error "incorrect length"
                      | otherwise = unsafeFromVector (r,c) vec
 {-# INLINE fromVector #-}
+
+fromList :: Matrix m v a => (Int, Int) -> [a] -> m v a
+fromList (r,c) = fromVector (r,c) . G.fromList
+{-# INLINE fromList #-}
 
 -- | O(m*n) Matrix construction
 matrix :: Matrix m v a
