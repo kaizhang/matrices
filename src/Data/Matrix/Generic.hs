@@ -17,7 +17,9 @@ module Data.Matrix.Generic
     , fromLists
     , matrix
     , fromRows
+    , takeRow
     , toRows
+    , takeColumn
     , toColumns
     , toLists
     , create
@@ -26,6 +28,7 @@ module Data.Matrix.Generic
 import Control.Monad.ST (runST, ST)
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import qualified Data.Vector.Generic as G
+import Text.Printf
 
 import qualified Data.Matrix.Generic.Mutable as MM
 
@@ -46,18 +49,18 @@ class (MM.MMatrix (Mutable m) (G.Mutable v) a, G.Vector v a) => Matrix m v a whe
     {-# INLINE flatten #-}
 
     -- | Extract a row. Default algorithm is O(n * O(unsafeIndex)).
-    takeRow :: m v a -> Int -> v a
-    takeRow mat i = G.generate c $ \j -> unsafeIndex mat (i,j)
+    unsafeTakeRow :: m v a -> Int -> v a
+    unsafeTakeRow mat i = G.generate c $ \j -> unsafeIndex mat (i,j)
       where
         (_,c) = dim mat
-    {-# INLINE takeRow #-}
+    {-# INLINE unsafeTakeRow #-}
 
     -- | Extract a column. Default algorithm is O(m * O(unsafeIndex)).
-    takeColumn :: m v a -> Int -> v a
-    takeColumn mat j = G.generate r $ \i -> unsafeIndex mat (i,j)
+    unsafeTakeColumn :: m v a -> Int -> v a
+    unsafeTakeColumn mat j = G.generate r $ \i -> unsafeIndex mat (i,j)
       where
         (r,_) = dim mat
-    {-# INLINE takeColumn #-}
+    {-# INLINE unsafeTakeColumn #-}
 
     -- | Extract the diagonal. Default algorithm is O(min(m,n) * O(unsafeIndex)).
     takeDiag :: m v a -> v a
@@ -149,16 +152,32 @@ fromRows xs | null xs = empty
     c = G.length . head $ xs
 {-# INLINE fromRows #-}
 
+-- | Extract a row.
+takeRow :: Matrix m v a => m v a -> Int -> v a
+takeRow mat i | i >= r = error $ printf "index out of bounds: (%d,%d)" i r
+              | otherwise = unsafeTakeRow mat i
+  where
+    (r,_) = dim mat
+{-# INLINE takeRow #-}
+
 -- | O(m) Return the rows
 toRows :: Matrix m v a => m v a -> [v a]
-toRows mat = map (takeRow mat) [0..r-1]
+toRows mat = map (unsafeTakeRow mat) [0..r-1]
   where
     (r,_) = dim mat
 {-# INLINE toRows #-}
 
+-- | Extract a row.
+takeColumn :: Matrix m v a => m v a -> Int -> v a
+takeColumn mat j | j >= c = error $ printf "index out of bounds: (%d,%d)" j c
+                 | otherwise = unsafeTakeColumn mat j
+  where
+    (_,c) = dim mat
+{-# INLINE takeColumn #-}
+
 -- | O(m*n) Return the columns
 toColumns :: Matrix m v a => m v a -> [v a]
-toColumns mat = map (takeColumn mat) [0..c-1]
+toColumns mat = map (unsafeTakeColumn mat) [0..c-1]
   where
     (_,c) = dim mat
 {-# INLINE toColumns #-}

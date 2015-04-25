@@ -74,6 +74,18 @@ instance (Zero a, G.Vector v a) => Matrix CSR v a where
         n = U.length nz
     {-# INLINE unsafeFromVector #-}
 
+    unsafeTakeRow (CSR _ c vec ci rp) i = G.fromList $ loop (-1) r0
+      where
+        loop !prev !n
+            | n > r1 = replicate (c-prev-1) zero
+            | otherwise = replicate (cur-prev-1) zero ++ (x : loop cur (n+1))
+          where
+            cur = ci `U.unsafeIndex` n
+            x = vec `G.unsafeIndex` n
+        r0 = rp `U.unsafeIndex` i
+        r1 = rp `U.unsafeIndex` (i+1) - 1
+    {-# INLINE unsafeTakeRow #-}
+
     thaw = undefined
     unsafeThaw = undefined
     freeze = undefined

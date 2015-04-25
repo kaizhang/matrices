@@ -111,10 +111,10 @@ instance G.Vector v a => MG.Matrix Matrix v a where
     {-# INLINE unsafeFromVector #-}
 
     -- | O(1) Extract a row.
-    takeRow (Matrix _ c tda offset vec) i = G.slice i' c vec
+    unsafeTakeRow (Matrix _ c tda offset vec) i = G.slice i' c vec
       where
         i' = offset + i * tda
-    {-# INLINE takeRow #-}
+    {-# INLINE unsafeTakeRow #-}
 
     -- | Create a vector by concatenating rows.
     flatten (Matrix r c tda offset vec)
