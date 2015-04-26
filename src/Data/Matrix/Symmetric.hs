@@ -25,9 +25,12 @@ module Data.Matrix.Symmetric
     ) where
 
 import Prelude hiding (zip, zipWith)
-import Control.Monad (liftM)
+import Control.Monad (liftM, guard)
 import Data.Bits (shiftR)
-import Data.Binary
+import Data.Binary (Binary(..), Get, Put, Word32)
+import Data.Binary.IEEE754 (getFloat64le, putFloat64le)
+import Data.Binary.Get (getWord64le, getWord32le)
+import Data.Binary.Put (putWord64le, putWord32le)
 import qualified Data.Vector.Generic as G
 
 import Data.Matrix.Generic
@@ -39,18 +42,10 @@ type instance Mutable SymMatrix = SymMMatrix
 data SymMatrix v a = SymMatrix !Int !(v a)
     deriving (Show)
 
-instance (G.Vector v a, Binary a) => Binary (SymMatrix v a) where
-    put (SymMatrix n vec) = do put (52 :: Int)
-                               put n
-                               G.mapM_ put vec
-    get = do
-        magic <- get :: Get Int
-        if magic == 52
-           then do
-               n <- get 
-               vec <- G.replicateM (((n+1)*n) `shiftR` 1) get
-               return $ SymMatrix n vec
-           else error "not a valid file"
+
+--------------------------------------------------------------------------------
+-- Instances
+--------------------------------------------------------------------------------
 
 instance G.Vector v a => Matrix SymMatrix v a where
     dim (SymMatrix n _) = (n,n)
@@ -77,6 +72,39 @@ instance G.Vector v a => Matrix SymMatrix v a where
 
     unsafeFreeze (SymMMatrix n v) = SymMatrix n `liftM` G.unsafeFreeze v
     {-# INLINE unsafeFreeze #-}
+
+magic :: Word32
+magic = 0x33D31A66
+
+instance (G.Vector v a, Binary a) => Binary (SymMatrix v a) where
+    put = putMatrix put
+    get = getMatrix get
+
+instance G.Vector v Double => Binary (SymMatrix v Double) where
+    put = putMatrix putFloat64le
+    get = getMatrix getFloat64le
+
+instance G.Vector v Int => Binary (SymMatrix v Int) where
+    put = putMatrix $ putWord64le . fromIntegral
+    get = getMatrix $ fromIntegral <$> getWord64le
+
+putMatrix :: G.Vector v a => (a -> Put) -> SymMatrix v a -> Put
+putMatrix putElement (SymMatrix n vec) = do
+    putWord32le magic
+    putWord64le . fromIntegral $ n
+    G.mapM_ putElement vec
+{-# INLINE putMatrix #-}
+
+getMatrix :: G.Vector v a => Get a -> Get (SymMatrix v a)
+getMatrix getElement = do
+    m <- getWord32le
+    guard $ m == magic
+    n <- fromIntegral <$> getWord64le
+    vec <- G.replicateM (((n+1)*n) `shiftR` 1) getElement
+    return $ SymMatrix n vec
+{-# INLINE getMatrix #-}
+
+--------------------------------------------------------------------------------
 
 map :: (G.Vector v a, G.Vector v b) => (a -> b) -> SymMatrix v a -> SymMatrix v b
 map f (SymMatrix n vec) = SymMatrix n $ G.map f vec

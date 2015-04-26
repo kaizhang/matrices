@@ -75,10 +75,15 @@ module Data.Matrix.Dense.Generic
     ) where
 
 import Prelude hiding (mapM_, mapM)
-import qualified Data.Vector.Generic as G
+import Control.Applicative ((<$>))
 import Control.Arrow ((***), (&&&))
-import Control.Monad (liftM, foldM, foldM_)
+import Control.Monad (liftM, foldM, foldM_, guard)
+import Data.Binary (Binary(..), Get, Put, Word32)
+import Data.Binary.IEEE754 (getFloat64le, putFloat64le)
+import Data.Binary.Get (getWord64le, getWord32le)
+import Data.Binary.Put (putWord64le, putWord32le)
 import qualified Data.Foldable as F
+import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as GM
 
 import qualified Data.Matrix.Generic as MG
@@ -134,6 +139,40 @@ instance G.Vector v a => MG.Matrix Matrix v a where
 
     unsafeFreeze (MMatrix r c tda offset v) = Matrix r c tda offset `liftM` G.unsafeFreeze v
     {-# INLINE unsafeFreeze #-}
+
+magic :: Word32
+magic = 0x22D20B77
+
+instance (G.Vector v a, Binary a) => Binary (Matrix v a) where
+    put = putMatrix put
+    get = getMatrix get
+
+instance G.Vector v Double => Binary (Matrix v Double) where
+    put = putMatrix putFloat64le
+    get = getMatrix getFloat64le
+
+instance G.Vector v Int => Binary (Matrix v Int) where
+    put = putMatrix $ putWord64le . fromIntegral
+    get = getMatrix $ fromIntegral <$> getWord64le
+
+putMatrix :: G.Vector v a => (a -> Put) -> Matrix v a -> Put
+putMatrix putElement (Matrix r c _ _ vec) = do
+    putWord32le magic
+    putWord64le . fromIntegral $ r
+    putWord64le . fromIntegral $ c
+    G.mapM_ putElement vec
+{-# INLINE putMatrix #-}
+
+getMatrix :: G.Vector v a => Get a -> Get (Matrix v a)
+getMatrix getElement = do
+    m <- getWord32le
+    guard $ m == magic
+    r <- fromIntegral <$> getWord64le
+    c <- fromIntegral <$> getWord64le
+    vec <- G.replicateM (r*c) getElement
+    return $ Matrix r c c 0 vec
+{-# INLINE getMatrix #-}
+
 
 --reshape :: G.Vector v a => Matrix v a -> (Int, Int) -> Matrix v a
 
