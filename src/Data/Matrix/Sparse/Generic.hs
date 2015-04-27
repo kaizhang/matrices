@@ -12,12 +12,8 @@ module Data.Matrix.Sparse.Generic
     ) where
 
 import Control.Applicative ((<$>))
-import Control.Monad (when, forM_, guard)
+import Control.Monad (when, forM_)
 import Control.Monad.ST (runST)
-import Data.Binary (Binary(..), Get, Put, Word32)
-import Data.Binary.IEEE754 (getFloat64le, putFloat64le)
-import Data.Binary.Get (getWord64le, getWord32le)
-import Data.Binary.Put (putWord64le, putWord32le)
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as GM
 import qualified Data.Vector.Unboxed as U
@@ -95,47 +91,6 @@ instance (Zero a, G.Vector v a) => Matrix CSR v a where
     unsafeThaw = undefined
     freeze = undefined
     unsafeFreeze = undefined
-
-magic :: Word32
-magic = 0x177BFFA0
-
-instance (G.Vector v a, Binary a) => Binary (CSR v a) where
-    put = putMatrix put
-    get = getMatrix get
-
-instance G.Vector v Double => Binary (CSR v Double) where
-    put = putMatrix putFloat64le
-    get = getMatrix getFloat64le
-
-instance G.Vector v Int => Binary (CSR v Int) where
-    put = putMatrix $ putWord64le . fromIntegral
-    get = getMatrix $ fromIntegral <$> getWord64le
-
-putMatrix :: G.Vector v a => (a -> Put) -> CSR v a -> Put
-putMatrix putElement (CSR r c vec ci rp) = do
-    putWord32le magic
-    putWord64le . fromIntegral $ r
-    putWord64le . fromIntegral $ c
-    putWord64le . fromIntegral $ n
-    G.mapM_ putElement vec
-    G.mapM_ (putWord64le . fromIntegral) ci
-    G.mapM_ (putWord64le . fromIntegral) rp
-  where
-    n = G.length vec
-{-# INLINE putMatrix #-}
-
-getMatrix :: G.Vector v a => Get a -> Get (CSR v a)
-getMatrix getElement = do
-    m <- getWord32le
-    guard $ m == magic
-    r <- fromIntegral <$> getWord64le
-    c <- fromIntegral <$> getWord64le
-    n <- fromIntegral <$> getWord64le
-    vec <- G.replicateM n getElement
-    ci <- G.replicateM n $ fromIntegral <$> getWord64le
-    rp <- G.replicateM c $ fromIntegral <$> getWord64le
-    return $ CSR r c vec ci rp
-{-# INLINE getMatrix #-}
 
 type AssocList a = [((Int, Int), a)]
 
