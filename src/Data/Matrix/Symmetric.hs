@@ -18,6 +18,7 @@ module Data.Matrix.Symmetric
     , unsafeThaw
     , freeze
     , unsafeFreeze
+    , create
     , Data.Matrix.Symmetric.map
     , imap
     , zip

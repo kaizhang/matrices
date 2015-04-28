@@ -6,21 +6,48 @@
 module Data.Matrix.Sparse.Generic
     ( Zero(..)
     , CSR(..)
+    , AssocList
+
+    -- * Accessors
+    -- ** length information
+    , MG.dim
+    , MG.rows
+    , MG.cols
+
+    -- ** Indexing
+    , MG.unsafeIndex
+    , (MG.!)
+    , MG.takeRow
+    , MG.takeColumn
+    , MG.takeDiag
+
+    -- * Construction
     , fromAscAL
-    , fromAscStream
-    , (!)
+    , MG.unsafeFromVector
+    , MG.fromVector
+    , MG.matrix
+    , MG.fromLists
+    , MG.fromRows
+    , MG.empty
+
+    -- * Conversions
+    , MG.flatten
+    , MG.toRows
+    , MG.toColumns
+    , MG.toList
+    , MG.toLists
     ) where
 
 import Control.Applicative ((<$>))
-import Control.Monad (when, forM_)
+import Control.Monad (when, forM_, foldM)
 import Control.Monad.ST (runST)
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as GM
 import qualified Data.Vector.Unboxed as U
-import qualified Data.Vector.Fusion.Stream as S
 import Data.Bits (shiftR)
+import Text.Printf (printf)
 
-import Data.Matrix.Generic
+import qualified Data.Matrix.Generic as MG
 import Data.Matrix.Dense.Generic.Mutable (MMatrix)
 
 class Eq a => Zero a where
@@ -36,7 +63,7 @@ instance Eq a => Zero ([] a) where
     zero = []
 
 -- | mutable sparse matrix not implemented
-type instance Mutable CSR = MMatrix
+type instance MG.Mutable CSR = MMatrix
 
 -- | Compressed Sparse Row (CSR) matrix
 data CSR v a = CSR !Int  -- rows
@@ -46,7 +73,7 @@ data CSR v a = CSR !Int  -- rows
                    !(U.Vector Int)  -- row pointer
     deriving (Show)
 
-instance (Zero a, G.Vector v a) => Matrix CSR v a where
+instance (Zero a, G.Vector v a) => MG.Matrix CSR v a where
     dim (CSR r c _ _ _) = (r,c)
     {-# INLINE dim #-}
 
@@ -94,35 +121,36 @@ instance (Zero a, G.Vector v a) => Matrix CSR v a where
 
 type AssocList a = [((Int, Int), a)]
 
+-- | Construct CSR from ascending association list. Items must be sorted first
+-- by row index, and then by column index.
 fromAscAL :: G.Vector v a => (Int, Int) -> Int -> AssocList a -> CSR v a
-fromAscAL (r,c) n al = fromAscStream (r,c) n . S.fromList $ al
-{-# INLINE fromAscAL #-}
-
-fromAscStream :: (GM.MVector (G.Mutable v) a, G.Vector v a) => (Int, Int) -> Int -> S.Stream ((Int,Int),a) -> CSR v a
-fromAscStream (r,c) n al = CSR r c values ci rp
+fromAscAL (r,c) n al = CSR r c values ci rp
   where
     (values, ci, rp) = runST $ do
         v <- GM.new n
         col <- GM.new n
         row <- GM.new (r+1)
 
-        let f (i',acc) ((i,j),x) = do
-                GM.write v acc x
-                GM.write col acc j
+        ((i,_),_) <- foldM (f v col row) ((-1,-1),0) al 
 
-                let stride = i - i'
-                when (stride > 0) $ forM_ [0..stride-1] $ \s -> GM.write row (i-s) acc
-                
-                return (i,acc+1)
-
-        _ <- S.foldM f (0,0) al
-        GM.write row r n
-
+        let stride = r - i
+        forM_ [0..stride-1] $ \s -> GM.write row (r-s) n
         v' <- G.unsafeFreeze v
         col' <- G.unsafeFreeze col
         row' <- G.unsafeFreeze row
         return (v', col', row')
-{-# INLINE fromAscStream #-}
+
+    f v col row ((i',j'), acc) ((i,j),x) =
+        if i > i' || (i == i' && j > j')
+           then do
+               GM.write v acc x
+               GM.write col acc j
+               let stride = i - i'
+               when (stride > 0) $ forM_ [0..stride-1] $ \s -> GM.write row (i-s) acc
+                                                                                                                                  
+               return ((i,j), acc+1)
+           else error $ printf "Input must be sorted by row and then by column: (%d,%d) >= (%d,%d)" i' j' i j
+{-# INLINE fromAscAL #-}
     
 binarySearchByBounds :: U.Vector Int -> Int -> Int -> Int -> Maybe Int
 binarySearchByBounds vec x = loop
