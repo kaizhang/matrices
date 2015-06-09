@@ -113,8 +113,11 @@ empty = fromVector (0,0) G.empty
 {-# INLINE empty #-}
 
 fromVector :: Matrix m v a => (Int, Int) -> v a -> m v a
-fromVector (r,c) vec | r*c /= G.length vec = error "incorrect length"
+fromVector (r,c) vec | r*c /= n = error errMsg
                      | otherwise = unsafeFromVector (r,c) vec
+  where
+    errMsg = printf "fromVector: incorrect length (%d * %d != %d)" r c n
+    n = G.length vec
 {-# INLINE fromVector #-}
 
 fromList :: Matrix m v a => (Int, Int) -> [a] -> m v a
