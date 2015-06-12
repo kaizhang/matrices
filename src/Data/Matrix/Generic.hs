@@ -96,7 +96,8 @@ cols = snd . dim
 
 -- | Indexing
 (!) :: Matrix m v a => m v a -> (Int, Int) -> a
-(!) mat (i,j) | i >= r || j >= c = error "Index out of bounds"
+(!) mat (i,j) | i < 0 || i >= r || j < 0 || j >= c =
+                error "Index out of bounds"
               | otherwise = unsafeIndex mat (i,j)
   where
     (r,c) = dim mat
@@ -154,7 +155,8 @@ fromRows xs | null xs = empty
 
 -- | Extract a row.
 takeRow :: Matrix m v a => m v a -> Int -> v a
-takeRow mat i | i >= r = error $ printf "index out of bounds: (%d,%d)" i r
+takeRow mat i | i < 0 || i >= r =
+                error $ printf "index out of bounds: (%d,%d)" i r
               | otherwise = unsafeTakeRow mat i
   where
     (r,_) = dim mat
@@ -169,7 +171,8 @@ toRows mat = map (unsafeTakeRow mat) [0..r-1]
 
 -- | Extract a row.
 takeColumn :: Matrix m v a => m v a -> Int -> v a
-takeColumn mat j | j >= c = error $ printf "index out of bounds: (%d,%d)" j c
+takeColumn mat j | j < 0 || j >= c =
+                   error $ printf "index out of bounds: (%d,%d)" j c
                  | otherwise = unsafeTakeColumn mat j
   where
     (_,c) = dim mat
