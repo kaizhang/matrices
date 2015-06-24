@@ -293,270 +293,270 @@ forM_ :: (G.Vector v a, Monad m) => Matrix v a -> (a -> m b) -> m ()
 forM_ = flip mapM_
 {-# INLINE forM_ #-}
 
-zipWith :: (G.Vector v a, G.Vector v b, G.Vector v c) => (a -> b -> c) -> Matrix v a -> Matrix v b -> Matrix v c
+zipWith :: (G.Vector v a, G.Vector v b, G.Vector v c)
+        => (a -> b -> c) -> Matrix v a -> Matrix v b -> Matrix v c
 zipWith f m1 m2
-  | MG.dim m1 /= MG.dim m2 = error "zipWith: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.zipWith f (MG.flatten m1) (MG.flatten m2)
+    | MG.dim m1 /= MG.dim m2 = error "zipWith: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.zipWith f (MG.flatten m1) $ MG.flatten m2
 {-# INLINE zipWith #-}
 
-zipWith3 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d) =>
-            (a -> b -> c -> d) -> Matrix v a -> Matrix v b -> Matrix v c -> Matrix v d
+zipWith3 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d)
+         => (a -> b -> c -> d) -> Matrix v a -> Matrix v b -> Matrix v c
+         -> Matrix v d
 zipWith3 f m1 m2 m3
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 = error "zipWith3: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.zipWith3 f (MG.flatten m1) (MG.flatten m2) (MG.flatten m3)
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 = error "zipWith3: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.zipWith3 f (MG.flatten m1) (MG.flatten m2) $ MG.flatten m3
 {-# INLINE zipWith3 #-}
 
-zipWith4 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d, G.Vector v e) =>
-            (a -> b -> c -> d -> e) -> Matrix v a -> Matrix v b ->
-            Matrix v c -> Matrix v d -> Matrix v e
+zipWith4 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d, G.Vector v e)
+         => (a -> b -> c -> d -> e) -> Matrix v a -> Matrix v b -> Matrix v c
+         -> Matrix v d -> Matrix v e
 zipWith4 f m1 m2 m3 m4
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 ||
-    MG.dim m3 /= MG.dim m4 = error "zipWith4: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.zipWith4 f (MG.flatten m1) (MG.flatten m2)
-                (MG.flatten m3) (MG.flatten m4)
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 ||
+      MG.dim m3 /= MG.dim m4 = error "zipWith4: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.zipWith4 f (MG.flatten m1) (MG.flatten m2)
+                  (MG.flatten m3) $ MG.flatten m4
 {-# INLINE zipWith4 #-}
 
-zipWith5 :: (G.Vector v a, G.Vector v b, G.Vector v c,
-             G.Vector v d, G.Vector v e, G.Vector v f) =>
-            (a -> b -> c -> d -> e -> f) -> Matrix v a -> Matrix v b ->
-            Matrix v c -> Matrix v d -> Matrix v e -> Matrix v f
+zipWith5 :: ( G.Vector v a, G.Vector v b, G.Vector v c,G.Vector v d
+            , G.Vector v e, G.Vector v f )
+         => (a -> b -> c -> d -> e -> f) -> Matrix v a -> Matrix v b
+         -> Matrix v c -> Matrix v d -> Matrix v e -> Matrix v f
 zipWith5 f m1 m2 m3 m4 m5
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 ||
-    MG.dim m3 /= MG.dim m4 ||
-    MG.dim m4 /= MG.dim m5 = error "zipWith5: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.zipWith5 f (MG.flatten m1) (MG.flatten m2)
-                (MG.flatten m3) (MG.flatten m4) (MG.flatten m5)
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 ||
+      MG.dim m3 /= MG.dim m4 ||
+      MG.dim m4 /= MG.dim m5 = error "zipWith5: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.zipWith5 f (MG.flatten m1) (MG.flatten m2)
+                  (MG.flatten m3) (MG.flatten m4) $ MG.flatten m5
 {-# INLINE zipWith5 #-}
 
-zipWith6 :: (G.Vector v a, G.Vector v b, G.Vector v c,
-             G.Vector v d, G.Vector v e, G.Vector v f,
-             G.Vector v g) =>
-            (a -> b -> c -> d -> e -> f -> g) -> Matrix v a -> Matrix v b ->
-            Matrix v c -> Matrix v d -> Matrix v e -> Matrix v f ->
-            Matrix v g
+zipWith6 :: ( G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d
+            , G.Vector v e, G.Vector v f, G.Vector v g )
+         => (a -> b -> c -> d -> e -> f -> g) -> Matrix v a -> Matrix v b
+         -> Matrix v c -> Matrix v d -> Matrix v e -> Matrix v f -> Matrix v g
 zipWith6 f m1 m2 m3 m4 m5 m6
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 ||
-    MG.dim m3 /= MG.dim m4 ||
-    MG.dim m4 /= MG.dim m5 ||
-    MG.dim m5 /= MG.dim m6 = error "zipWith6: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.zipWith6 f (MG.flatten m1) (MG.flatten m2)
-                (MG.flatten m3) (MG.flatten m4) (MG.flatten m5)
-                (MG.flatten m6)
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 ||
+      MG.dim m3 /= MG.dim m4 ||
+      MG.dim m4 /= MG.dim m5 ||
+      MG.dim m5 /= MG.dim m6 = error "zipWith6: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.zipWith6 f (MG.flatten m1) (MG.flatten m2) (MG.flatten m3)
+                  (MG.flatten m4) (MG.flatten m5) $ MG.flatten m6
 {-# INLINE zipWith6 #-}
 
-izipWith :: (G.Vector v a, G.Vector v b, G.Vector v c) =>
-            ((Int, Int) -> a -> b -> c) -> Matrix v a -> Matrix v b -> Matrix v c
+izipWith :: (G.Vector v a, G.Vector v b, G.Vector v c)
+         => ((Int, Int) -> a -> b -> c) -> Matrix v a -> Matrix v b -> Matrix v c
 izipWith f m1 m2
-  | MG.dim m1 /= MG.dim m2 = error "izipWith: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.izipWith f' (MG.flatten m1) (MG.flatten m2)
+    | MG.dim m1 /= MG.dim m2 = error "izipWith: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.izipWith f' (MG.flatten m1) $ MG.flatten m2
   where
     c = MG.cols m1
     f' i = f (i `div` c, i `mod` c)
 {-# INLINE izipWith #-}
 
-izipWith3 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d) =>
-            ((Int, Int) -> a -> b -> c -> d) -> Matrix v a -> Matrix v b -> Matrix v c -> Matrix v d
+izipWith3 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d)
+          => ((Int, Int) -> a -> b -> c -> d) -> Matrix v a -> Matrix v b
+          -> Matrix v c -> Matrix v d
 izipWith3 f m1 m2 m3
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 = error "izipWith3: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.izipWith3 f' (MG.flatten m1) (MG.flatten m2) (MG.flatten m3)
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 = error "izipWith3: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.izipWith3 f' (MG.flatten m1) (MG.flatten m2) $ MG.flatten m3
   where
     c = MG.cols m1
     f' i = f (i `div` c, i `mod` c)
 {-# INLINE izipWith3 #-}
 
-izipWith4 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d, G.Vector v e) =>
-            ((Int, Int) -> a -> b -> c -> d -> e) -> Matrix v a -> Matrix v b ->
-            Matrix v c -> Matrix v d -> Matrix v e
+izipWith4 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d, G.Vector v e)
+          => ((Int, Int) -> a -> b -> c -> d -> e) -> Matrix v a -> Matrix v b
+          -> Matrix v c -> Matrix v d -> Matrix v e
 izipWith4 f m1 m2 m3 m4
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 ||
-    MG.dim m3 /= MG.dim m4 = error "izipWith4: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.izipWith4 f' (MG.flatten m1) (MG.flatten m2)
-                (MG.flatten m3) (MG.flatten m4)
-                  where
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 ||
+      MG.dim m3 /= MG.dim m4 = error "izipWith4: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.izipWith4 f' (MG.flatten m1) (MG.flatten m2)
+                  (MG.flatten m3) $ MG.flatten m4
+  where
     c = MG.cols m1
     f' i = f (i `div` c, i `mod` c)
 {-# INLINE izipWith4 #-}
 
-izipWith5 :: (G.Vector v a, G.Vector v b, G.Vector v c,
-             G.Vector v d, G.Vector v e, G.Vector v f) =>
-            ((Int, Int) -> a -> b -> c -> d -> e -> f) -> Matrix v a -> Matrix v b ->
-            Matrix v c -> Matrix v d -> Matrix v e -> Matrix v f
+izipWith5 :: ( G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d
+             , G.Vector v e, G.Vector v f )
+          => ((Int, Int) -> a -> b -> c -> d -> e -> f) -> Matrix v a
+          -> Matrix v b -> Matrix v c -> Matrix v d -> Matrix v e -> Matrix v f
 izipWith5 f m1 m2 m3 m4 m5
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 ||
-    MG.dim m3 /= MG.dim m4 ||
-    MG.dim m4 /= MG.dim m5 = error "izipWith5: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.izipWith5 f' (MG.flatten m1) (MG.flatten m2)
-                (MG.flatten m3) (MG.flatten m4) (MG.flatten m5)
-                  where
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 ||
+      MG.dim m3 /= MG.dim m4 ||
+      MG.dim m4 /= MG.dim m5 = error "izipWith5: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.izipWith5 f' (MG.flatten m1) (MG.flatten m2)
+                  (MG.flatten m3) (MG.flatten m4) $ MG.flatten m5
+  where
     c = MG.cols m1
     f' i = f (i `div` c, i `mod` c)
 {-# INLINE izipWith5 #-}
 
-izipWith6 :: (G.Vector v a, G.Vector v b, G.Vector v c,
-             G.Vector v d, G.Vector v e, G.Vector v f,
-             G.Vector v g) =>
-            ((Int, Int) -> a -> b -> c -> d -> e -> f -> g) -> Matrix v a -> Matrix v b ->
-            Matrix v c -> Matrix v d -> Matrix v e -> Matrix v f ->
-            Matrix v g
+izipWith6 :: ( G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d
+             , G.Vector v e, G.Vector v f, G.Vector v g )
+          => ((Int, Int) -> a -> b -> c -> d -> e -> f -> g) -> Matrix v a
+          -> Matrix v b -> Matrix v c -> Matrix v d -> Matrix v e -> Matrix v f
+          -> Matrix v g
 izipWith6 f m1 m2 m3 m4 m5 m6
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 ||
-    MG.dim m3 /= MG.dim m4 ||
-    MG.dim m4 /= MG.dim m5 ||
-    MG.dim m5 /= MG.dim m6 = error "izipWith6: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.izipWith6 f' (MG.flatten m1) (MG.flatten m2)
-                (MG.flatten m3) (MG.flatten m4) (MG.flatten m5)
-                (MG.flatten m6)
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 ||
+      MG.dim m3 /= MG.dim m4 ||
+      MG.dim m4 /= MG.dim m5 ||
+      MG.dim m5 /= MG.dim m6 = error "izipWith6: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.izipWith6 f' (MG.flatten m1) (MG.flatten m2) (MG.flatten m3)
+                  (MG.flatten m4) (MG.flatten m5) $ MG.flatten m6
   where
     c = MG.cols m1
     f' i = f (i `div` c, i `mod` c)
 {-# INLINE izipWith6 #-}
 
 
-zip :: (G.Vector v a, G.Vector v b, G.Vector v (a,b)) => Matrix v a -> Matrix v b -> Matrix v (a,b)
+zip :: (G.Vector v a, G.Vector v b, G.Vector v (a,b))
+    => Matrix v a -> Matrix v b -> Matrix v (a,b)
 zip m1 m2
-  | MG.dim m1 /= MG.dim m2 = error "zip: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.zip (MG.flatten m1) (MG.flatten m2)
+    | MG.dim m1 /= MG.dim m2 = error "zip: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.zip (MG.flatten m1) $ MG.flatten m2
 {-# INLINE zip #-}
 
-zip3 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v (a,b,c)) =>
-       Matrix v a -> Matrix v b -> Matrix v c -> Matrix v (a,b,c)
+zip3 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v (a,b,c))
+     => Matrix v a -> Matrix v b -> Matrix v c -> Matrix v (a,b,c)
 zip3 m1 m2 m3
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 = error "zip3: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.zip3 (MG.flatten m1) (MG.flatten m2) (MG.flatten m3)
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 = error "zip3: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.zip3 (MG.flatten m1) (MG.flatten m2) $ MG.flatten m3
 {-# INLINE zip3 #-}
 
-zip4 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d, G.Vector v (a,b,c,d)) =>
-        Matrix v a -> Matrix v b -> Matrix v c -> Matrix v d -> Matrix v (a,b,c,d)
+zip4 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d, G.Vector v (a,b,c,d))
+     => Matrix v a -> Matrix v b -> Matrix v c -> Matrix v d -> Matrix v (a,b,c,d)
 zip4 m1 m2 m3 m4
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 ||
-    MG.dim m3 /= MG.dim m4 = error "zip4: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.zip4 (MG.flatten m1) (MG.flatten m2)
-                (MG.flatten m3) (MG.flatten m4)
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 ||
+      MG.dim m3 /= MG.dim m4 = error "zip4: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.zip4 (MG.flatten m1) (MG.flatten m2)
+                  (MG.flatten m3) $ MG.flatten m4
 {-# INLINE zip4 #-}
 
-zip5 :: (G.Vector v a, G.Vector v b, G.Vector v c,
-             G.Vector v d, G.Vector v e, G.Vector v (a,b,c,d,e)) =>
-            Matrix v a -> Matrix v b ->
-            Matrix v c -> Matrix v d -> Matrix v e -> Matrix v (a,b,c,d,e)
+zip5 :: ( G.Vector v a, G.Vector v b, G.Vector v c
+        , G.Vector v d, G.Vector v e, G.Vector v (a,b,c,d,e) )
+     => Matrix v a -> Matrix v b -> Matrix v c -> Matrix v d -> Matrix v e
+     -> Matrix v (a,b,c,d,e)
 zip5 m1 m2 m3 m4 m5
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 ||
-    MG.dim m3 /= MG.dim m4 ||
-    MG.dim m4 /= MG.dim m5 = error "zip5: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.zip5 (MG.flatten m1) (MG.flatten m2)
-                (MG.flatten m3) (MG.flatten m4) (MG.flatten m5)
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 ||
+      MG.dim m3 /= MG.dim m4 ||
+      MG.dim m4 /= MG.dim m5 = error "zip5: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.zip5 (MG.flatten m1) (MG.flatten m2)
+                  (MG.flatten m3) (MG.flatten m4) $ MG.flatten m5
 {-# INLINE zip5 #-}
 
-zip6 :: (G.Vector v a, G.Vector v b, G.Vector v c,
-         G.Vector v d, G.Vector v e, G.Vector v f,
-         G.Vector v (a,b,c,d,e,f)) =>
-        Matrix v a -> Matrix v b -> Matrix v c ->
-        Matrix v d -> Matrix v e -> Matrix v f ->
-        Matrix v (a,b,c,d,e,f)
+zip6 :: ( G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d, G.Vector v e
+        , G.Vector v f, G.Vector v (a,b,c,d,e,f) )
+     => Matrix v a -> Matrix v b -> Matrix v c -> Matrix v d -> Matrix v e
+     -> Matrix v f -> Matrix v (a,b,c,d,e,f)
 zip6 m1 m2 m3 m4 m5 m6
-  | MG.dim m1 /= MG.dim m2 ||
-    MG.dim m2 /= MG.dim m3 ||
-    MG.dim m3 /= MG.dim m4 ||
-    MG.dim m4 /= MG.dim m5 ||
-    MG.dim m5 /= MG.dim m6 = error "zip6: Dimensions don't match."
-  | otherwise = MG.fromVector (MG.dim m1) $
-                G.zip6 (MG.flatten m1) (MG.flatten m2)
-                (MG.flatten m3) (MG.flatten m4) (MG.flatten m5)
-                (MG.flatten m6)
+    | MG.dim m1 /= MG.dim m2 ||
+      MG.dim m2 /= MG.dim m3 ||
+      MG.dim m3 /= MG.dim m4 ||
+      MG.dim m4 /= MG.dim m5 ||
+      MG.dim m5 /= MG.dim m6 = error "zip6: Dimensions don't match."
+    | otherwise = MG.fromVector (MG.dim m1) $
+                  G.zip6 (MG.flatten m1) (MG.flatten m2) (MG.flatten m3)
+                  (MG.flatten m4) (MG.flatten m5) $ MG.flatten m6
 {-# INLINE zip6 #-}
 
-zipWithM :: (Monad m, G.Vector v a, G.Vector v b, G.Vector v c) =>
-            (a -> b -> m c) -> Matrix v a -> Matrix v b -> m (Matrix v c)
+zipWithM :: (Monad m, G.Vector v a, G.Vector v b, G.Vector v c)
+         => (a -> b -> m c) -> Matrix v a -> Matrix v b -> m (Matrix v c)
 zipWithM f m1 m2
-  | MG.dim m1 /= MG.dim m2 = error "zipWithM: Dimensions don't match."
-  | otherwise = liftM (MG.fromVector $ MG.dim m1) $
-                G.zipWithM f (MG.flatten m1) (MG.flatten m2)
+    | MG.dim m1 /= MG.dim m2 = error "zipWithM: Dimensions don't match."
+    | otherwise = liftM (MG.fromVector $ MG.dim m1) $
+                  G.zipWithM f (MG.flatten m1) $ MG.flatten m2
 {-# INLINE zipWithM #-}
 
-zipWithM_ :: (Monad m, G.Vector v a, G.Vector v b) =>
-            (a -> b -> m c) -> Matrix v a -> Matrix v b -> m ()
+zipWithM_ :: (Monad m, G.Vector v a, G.Vector v b)
+          => (a -> b -> m c) -> Matrix v a -> Matrix v b -> m ()
 zipWithM_ f m1 m2
-  | MG.dim m1 /= MG.dim m2 = error "zipWithM_: Dimensions don't match."
-  | otherwise = G.zipWithM_ f (MG.flatten m1) (MG.flatten m2)
+    | MG.dim m1 /= MG.dim m2 = error "zipWithM_: Dimensions don't match."
+    | otherwise = G.zipWithM_ f (MG.flatten m1) $ MG.flatten m2
 {-# INLINE zipWithM_ #-}
 
-unzip :: (G.Vector v a, G.Vector v b, G.Vector v (a,b)) => Matrix v (a,b) -> (Matrix v a, Matrix v b )
-unzip m = (MG.fromVector d v1,
-           MG.fromVector d v2)
+unzip :: (G.Vector v a, G.Vector v b, G.Vector v (a,b))
+      => Matrix v (a,b) -> (Matrix v a, Matrix v b )
+unzip m = (MG.fromVector d v1, MG.fromVector d v2)
   where
     d = MG.dim m
-    (v1, v2) = G.unzip (MG.flatten m)
+    (v1, v2) = G.unzip $ MG.flatten m
 {-# INLINE unzip #-}
 
-unzip3 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v (a,b,c)) =>
-          Matrix v (a,b, c) -> (Matrix v a, Matrix v b, Matrix v c)
-unzip3 m = (MG.fromVector d v1,
-            MG.fromVector d v2,
-            MG.fromVector d v3)
+unzip3 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v (a,b,c))
+       => Matrix v (a,b, c) -> (Matrix v a, Matrix v b, Matrix v c)
+unzip3 m = (MG.fromVector d v1, MG.fromVector d v2, MG.fromVector d v3)
   where
     d = MG.dim m
-    (v1, v2, v3) = G.unzip3 (MG.flatten m)
+    (v1, v2, v3) = G.unzip3 $ MG.flatten m
 {-# INLINE unzip3 #-}
 
-unzip4 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d, G.Vector v (a,b,c,d)) =>
-          Matrix v (a,b,c,d) -> (Matrix v a, Matrix v b, Matrix v c, Matrix v d)
-unzip4 m = (MG.fromVector d v1,
-            MG.fromVector d v2,
-            MG.fromVector d v3,
-            MG.fromVector d v4)
+unzip4 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d, G.Vector v (a,b,c,d))
+       => Matrix v (a,b,c,d) -> (Matrix v a, Matrix v b, Matrix v c, Matrix v d)
+unzip4 m = ( MG.fromVector d v1
+           , MG.fromVector d v2
+           , MG.fromVector d v3
+           , MG.fromVector d v4
+           )
   where
     d = MG.dim m
-    (v1, v2, v3, v4) = G.unzip4 (MG.flatten m)
+    (v1, v2, v3, v4) = G.unzip4 $ MG.flatten m
 {-# INLINE unzip4 #-}
 
-unzip5 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d, G.Vector v e, G.Vector v (a,b,c,d,e)) =>
-          Matrix v (a,b,c,d,e) -> (Matrix v a, Matrix v b, Matrix v c, Matrix v d, Matrix v e)
-unzip5 m = (MG.fromVector d v1,
-            MG.fromVector d v2,
-            MG.fromVector d v3,
-            MG.fromVector d v4,
-            MG.fromVector d v5)
+unzip5 :: ( G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d
+          , G.Vector v e, G.Vector v (a,b,c,d,e) )
+       => Matrix v (a,b,c,d,e)
+       -> (Matrix v a, Matrix v b, Matrix v c, Matrix v d, Matrix v e)
+unzip5 m = ( MG.fromVector d v1
+           , MG.fromVector d v2
+           , MG.fromVector d v3
+           , MG.fromVector d v4
+           , MG.fromVector d v5
+           )
   where
     d = MG.dim m
-    (v1, v2, v3, v4, v5) = G.unzip5 (MG.flatten m)
+    (v1, v2, v3, v4, v5) = G.unzip5 $ MG.flatten m
 {-# INLINE unzip5 #-}
 
-unzip6 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d,
-           G.Vector v e, G.Vector v f, G.Vector v (a,b,c,d,e,f)) =>
-          Matrix v (a,b,c,d,e,f) -> (Matrix v a, Matrix v b, Matrix v c, Matrix v d, Matrix v e, Matrix v f)
-unzip6 m = (MG.fromVector d v1,
-            MG.fromVector d v2,
-            MG.fromVector d v3,
-            MG.fromVector d v4,
-            MG.fromVector d v5,
-            MG.fromVector d v6)
+unzip6 :: ( G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d
+          , G.Vector v e, G.Vector v f, G.Vector v (a,b,c,d,e,f) )
+       => Matrix v (a,b,c,d,e,f)
+       -> (Matrix v a, Matrix v b, Matrix v c, Matrix v d, Matrix v e, Matrix v f)
+unzip6 m = ( MG.fromVector d v1
+           , MG.fromVector d v2
+           , MG.fromVector d v3
+           , MG.fromVector d v4
+           , MG.fromVector d v5
+           , MG.fromVector d v6
+           )
   where
     d = MG.dim m
-    (v1, v2, v3, v4, v5, v6) = G.unzip6 (MG.flatten m)
+    (v1, v2, v3, v4, v5, v6) = G.unzip6 $ MG.flatten m
 {-# INLINE unzip6 #-}
 
 sequence :: (G.Vector v a, G.Vector v (m a), Monad m)
