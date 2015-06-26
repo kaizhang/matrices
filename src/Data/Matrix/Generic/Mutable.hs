@@ -29,23 +29,18 @@ class GM.MVector v a => MMatrix m v a where
 
 write :: (PrimMonad s, MMatrix m v a)
       => m v (PrimState s) a -> (Int, Int) -> a -> s ()
-write mat (i,j) | i >= r || j >= c = error "Index out of bounds"
-                | otherwise = unsafeWrite mat (i,j)
+write mat (i,j)
+    | i < 0 || i >= r || j < 0 || j >= c = error "write: Index out of bounds"
+    | otherwise = unsafeWrite mat (i,j)
   where
     (r,c) = dim mat
 {-# INLINE write #-}
 
 read :: (PrimMonad s, MMatrix m v a)
      => m v (PrimState s) a -> (Int, Int) -> s a
-read mat (i,j) | i >= r || j >= c = error "Index out of bounds"
-               | otherwise = unsafeRead mat (i,j)
+read mat (i,j)
+    | i <0 || i >= r || j < 0 || j >= c = error "read: Index out of bounds"
+    | otherwise = unsafeRead mat (i,j)
   where
     (r,c) = dim mat
 {-# INLINE read #-}
-
-{-
-replicate :: (PrimMonad s, MMatrix m v a)
-          => (Int, Int) -> a -> s (m v (PrimState s) a)
-replicate (r,c) x = do
-    mat <- new (r,c)
- -}   
