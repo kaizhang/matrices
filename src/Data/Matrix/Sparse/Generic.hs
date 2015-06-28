@@ -1,8 +1,8 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE BangPatterns          #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies          #-}
 module Data.Matrix.Sparse.Generic
     ( Zero(..)
     , CSR(..)
@@ -38,17 +38,17 @@ module Data.Matrix.Sparse.Generic
     , MG.toLists
     ) where
 
-import Control.Applicative ((<$>))
-import Control.Monad (when, forM_, foldM)
-import Control.Monad.ST (runST)
-import qualified Data.Vector.Generic as G
-import qualified Data.Vector.Generic.Mutable as GM
-import qualified Data.Vector.Unboxed as U
-import Data.Bits (shiftR)
-import Text.Printf (printf)
+import           Control.Applicative               ((<$>))
+import           Control.Monad                     (foldM, forM_, when)
+import           Control.Monad.ST                  (runST)
+import           Data.Bits                         (shiftR)
+import qualified Data.Vector.Generic               as G
+import qualified Data.Vector.Generic.Mutable       as GM
+import qualified Data.Vector.Unboxed               as U
+import           Text.Printf                       (printf)
 
-import qualified Data.Matrix.Generic as MG
-import Data.Matrix.Dense.Generic.Mutable (MMatrix)
+import           Data.Matrix.Dense.Generic.Mutable (MMatrix)
+import qualified Data.Matrix.Generic               as MG
 
 class Eq a => Zero a where
     zero :: a
@@ -131,7 +131,7 @@ fromAscAL (r,c) n al = CSR r c values ci rp
         col <- GM.new n
         row <- GM.new (r+1)
 
-        ((i,_),_) <- foldM (f v col row) ((-1,-1),0) al 
+        ((i,_),_) <- foldM (f v col row) ((-1,-1),0) al
 
         let stride = r - i
         forM_ [0..stride-1] $ \s -> GM.write row (r-s) n
@@ -147,11 +147,11 @@ fromAscAL (r,c) n al = CSR r c values ci rp
                GM.write col acc j
                let stride = i - i'
                when (stride > 0) $ forM_ [0..stride-1] $ \s -> GM.write row (i-s) acc
-                                                                                                                                  
+
                return ((i,j), acc+1)
            else error $ printf "Input must be sorted by row and then by column: (%d,%d) >= (%d,%d)" i' j' i j
 {-# INLINE fromAscAL #-}
-    
+
 binarySearchByBounds :: U.Vector Int -> Int -> Int -> Int -> Maybe Int
 binarySearchByBounds vec x = loop
   where

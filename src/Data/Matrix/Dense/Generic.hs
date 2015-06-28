@@ -1,10 +1,10 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE BangPatterns          #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies          #-}
 module Data.Matrix.Dense.Generic
-    ( 
+    (
     -- * Immutable Matrix
       Matrix(..)
 
@@ -48,7 +48,7 @@ module Data.Matrix.Dense.Generic
     , fromBlocks
     , isSymmetric
     , force
-    
+
     , Data.Matrix.Dense.Generic.foldl
 
     -- * Mapping
@@ -102,15 +102,15 @@ module Data.Matrix.Dense.Generic
     , MG.create
     ) where
 
-import Prelude hiding (mapM_, mapM)
-import Control.Arrow ((***), (&&&))
-import Control.Monad (liftM, foldM, foldM_)
-import qualified Data.Foldable as F
-import qualified Data.Vector.Generic as G
-import qualified Data.Vector.Generic.Mutable as GM
+import           Control.Arrow                     ((&&&), (***))
+import           Control.Monad                     (foldM, foldM_, liftM)
+import qualified Data.Foldable                     as F
+import qualified Data.Vector.Generic               as G
+import qualified Data.Vector.Generic.Mutable       as GM
+import           Prelude                           hiding (mapM, mapM_)
 
-import qualified Data.Matrix.Generic as MG
-import Data.Matrix.Dense.Generic.Mutable (MMatrix(..))
+import           Data.Matrix.Dense.Generic.Mutable (MMatrix (..))
+import qualified Data.Matrix.Generic               as MG
 
 type instance MG.Mutable Matrix = MMatrix
 

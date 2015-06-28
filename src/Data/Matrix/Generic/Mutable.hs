@@ -1,5 +1,5 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Data.Matrix.Generic.Mutable
     ( MMatrix(..)
@@ -7,9 +7,9 @@ module Data.Matrix.Generic.Mutable
     , read
     ) where
 
-import Prelude hiding (read)
-import Control.Monad.Primitive (PrimMonad, PrimState)
+import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import qualified Data.Vector.Generic.Mutable as GM
+import           Prelude                     hiding (read)
 
 class GM.MVector v a => MMatrix m v a where
     dim ::  m v s a -> (Int, Int)

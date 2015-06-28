@@ -1,8 +1,8 @@
+{-# LANGUAGE BangPatterns          #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE TypeFamilies          #-}
 module Data.Matrix.Symmetric
     ( SymMatrix(..)
     , dim
@@ -25,13 +25,14 @@ module Data.Matrix.Symmetric
     , zipWith
     ) where
 
-import Prelude hiding (zip, zipWith)
-import Control.Monad (liftM)
-import Data.Bits (shiftR)
-import qualified Data.Vector.Generic as G
+import           Control.Monad                 (liftM)
+import           Data.Bits                     (shiftR)
+import qualified Data.Vector.Generic           as G
+import           Prelude                       hiding (zip, zipWith)
 
-import Data.Matrix.Generic
-import Data.Matrix.Symmetric.Mutable (SymMMatrix(..), unsafeWrite, new)
+import           Data.Matrix.Generic
+import           Data.Matrix.Symmetric.Mutable (SymMMatrix (..), new,
+                                                unsafeWrite)
 
 type instance Mutable SymMatrix = SymMMatrix
 

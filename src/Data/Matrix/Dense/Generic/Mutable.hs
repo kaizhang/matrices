@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Data.Matrix.Dense.Generic.Mutable
    ( -- * Mutable Matrix
@@ -13,9 +13,9 @@ module Data.Matrix.Dense.Generic.Mutable
    , C.replicate
    ) where
 
-import Prelude hiding (read, replicate)
-import Control.Monad (liftM)
+import           Control.Monad               (liftM)
 import qualified Data.Vector.Generic.Mutable as GM
+import           Prelude                     hiding (read, replicate)
 
 import qualified Data.Matrix.Generic.Mutable as C
 
@@ -39,7 +39,7 @@ instance GM.MVector v a => C.MMatrix MMatrix v a where
 
     replicate (r,c) x = MMatrix r c c 0 `liftM` GM.replicate (r*c) x
     {-# INLINE replicate #-}
-    
+
 takeRow :: GM.MVector v a => MMatrix v m a -> Int -> v m a
 takeRow (MMatrix _ c tda offset vec) i = GM.slice i' c vec
   where

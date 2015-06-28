@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Data.Matrix.Symmetric.Mutable
    ( -- * Mutable Matrix
@@ -12,10 +12,10 @@ module Data.Matrix.Symmetric.Mutable
    , C.replicate
    ) where
 
-import Prelude hiding (read, replicate)
-import Control.Monad (liftM)
-import Data.Bits (shiftR)
+import           Control.Monad               (liftM)
+import           Data.Bits                   (shiftR)
 import qualified Data.Vector.Generic.Mutable as GM
+import           Prelude                     hiding (read, replicate)
 
 import qualified Data.Matrix.Generic.Mutable as C
 
