@@ -1,7 +1,7 @@
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types            #-}
+{-# LANGUAGE TypeFamilies          #-}
 module Data.Matrix.Generic
     ( Mutable
     , Matrix(..)
@@ -25,10 +25,10 @@ module Data.Matrix.Generic
     , create
     ) where
 
-import Control.Monad.ST (runST, ST)
-import Control.Monad.Primitive (PrimMonad, PrimState)
-import qualified Data.Vector.Generic as G
-import Text.Printf
+import           Control.Monad.Primitive     (PrimMonad, PrimState)
+import           Control.Monad.ST            (ST, runST)
+import qualified Data.Vector.Generic         as G
+import           Text.Printf
 
 import qualified Data.Matrix.Generic.Mutable as MM
 
