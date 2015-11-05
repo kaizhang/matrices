@@ -120,7 +120,7 @@ data Matrix v a = Matrix !Int    -- number of rows
                          !Int    -- physical row dimension
                          !Int    -- offset
                          !(v a)  -- flat matrix
-    deriving (Show)
+    deriving (Show, Read, Eq)
 
 
 instance G.Vector v a => MG.Matrix Matrix v a where
