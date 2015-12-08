@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Data.Matrix.Dense.Generic.Mutable
    ( -- * Mutable Matrix
@@ -14,6 +15,7 @@ module Data.Matrix.Dense.Generic.Mutable
    ) where
 
 import           Control.Monad               (liftM)
+import           Control.DeepSeq
 import qualified Data.Vector.Generic.Mutable as GM
 import           Prelude                     hiding (read, replicate)
 
@@ -21,6 +23,9 @@ import qualified Data.Matrix.Generic.Mutable as C
 
 -- | mutable matrix
 data MMatrix v s a = MMatrix !Int !Int !Int !Int !(v s a)
+
+instance (NFData (v s a)) => NFData (MMatrix v s a) where
+ rnf (MMatrix _ _ _ _ vec) = rnf vec
 
 instance GM.MVector v a => C.MMatrix MMatrix v a where
     dim (MMatrix r c _ _ _) = (r,c)
