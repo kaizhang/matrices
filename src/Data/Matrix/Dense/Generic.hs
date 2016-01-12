@@ -103,6 +103,7 @@ module Data.Matrix.Dense.Generic
     ) where
 
 import           Control.Arrow                     ((&&&), (***))
+import           Control.DeepSeq                   hiding (force)
 import           Control.Monad                     (foldM, foldM_, liftM)
 import qualified Data.Foldable                     as F
 import qualified Data.Vector.Generic               as G
@@ -122,6 +123,8 @@ data Matrix v a = Matrix !Int    -- number of rows
                          !(v a)  -- flat matrix
     deriving (Show, Read, Eq)
 
+instance NFData (v a) => NFData (Matrix v a) where
+ rnf (Matrix _ _ _ _ vec) = rnf vec
 
 instance G.Vector v a => MG.Matrix Matrix v a where
     -- | O(1) Return the size of matrix.
