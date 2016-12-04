@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE DeriveGeneric      #-}
 module Data.Matrix.Symmetric
     ( SymMatrix(..)
     , dim
@@ -29,6 +30,7 @@ import           Control.Monad                 (liftM)
 import           Data.Bits                     (shiftR)
 import qualified Data.Vector.Generic           as G
 import           Prelude                       hiding (zip, zipWith)
+import           GHC.Generics          (Generic)
 
 import           Data.Matrix.Generic
 import           Data.Matrix.Symmetric.Mutable (SymMMatrix (..), new,
@@ -38,7 +40,7 @@ type instance Mutable SymMatrix = SymMMatrix
 
 -- | Symmetric square matrix
 data SymMatrix v a = SymMatrix !Int !(v a)
-    deriving (Show)
+    deriving (Show, Read, Generic, Eq)
 
 
 --------------------------------------------------------------------------------

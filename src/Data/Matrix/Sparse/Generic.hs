@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE DeriveGeneric      #-}
 module Data.Matrix.Sparse.Generic
     ( Zero(..)
     , CSR(..)
@@ -46,6 +47,7 @@ import qualified Data.Vector.Generic               as G
 import qualified Data.Vector.Generic.Mutable       as GM
 import qualified Data.Vector.Unboxed               as U
 import           Text.Printf                       (printf)
+import           GHC.Generics          (Generic)
 
 import           Data.Matrix.Dense.Generic.Mutable (MMatrix)
 import qualified Data.Matrix.Generic               as MG
@@ -71,7 +73,7 @@ data CSR v a = CSR !Int  -- rows
                    !(v a)  -- values
                    !(U.Vector Int)  -- column index of values
                    !(U.Vector Int)  -- row pointer
-    deriving (Show)
+    deriving (Show, Read, Eq, Generic)
 
 instance (Zero a, G.Vector v a) => MG.Matrix CSR v a where
     dim (CSR r c _ _ _) = (r,c)

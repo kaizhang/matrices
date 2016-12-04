@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns          #-}
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -111,6 +112,7 @@ import           Prelude                           hiding (mapM, mapM_)
 
 import           Data.Matrix.Dense.Generic.Mutable (MMatrix (..))
 import qualified Data.Matrix.Generic               as MG
+import           GHC.Generics                      (Generic)
 
 type instance MG.Mutable Matrix = MMatrix
 
@@ -120,7 +122,7 @@ data Matrix v a = Matrix !Int    -- number of rows
                          !Int    -- physical row dimension
                          !Int    -- offset
                          !(v a)  -- flat matrix
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Generic)
 
 
 instance G.Vector v a => MG.Matrix Matrix v a where
