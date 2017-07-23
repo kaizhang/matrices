@@ -53,11 +53,14 @@ module Data.Matrix.Dense.Generic
     , Data.Matrix.Dense.Generic.foldl
 
     -- * Mapping
-    , imap
     , Data.Matrix.Dense.Generic.map
+    , imap
+
     -- * Monadic mapping
     , mapM
+    , imapM
     , mapM_
+    , imapM_
     , forM
     , forM_
 
@@ -117,7 +120,7 @@ import           GHC.Generics                      (Generic)
 
 type instance MG.Mutable Matrix = MMatrix
 
--- | row-major matrix supporting efficient slice
+-- | Row-major matrix supporting efficient slice
 data Matrix v a = Matrix !Int    -- number of rows
                          !Int    -- number of cols
                          !Int    -- physical row dimension
@@ -268,29 +271,50 @@ force :: G.Vector v a => Matrix v a -> Matrix v a
 force m@(Matrix r c _ _ _) = MG.fromVector (r,c) . G.force . MG.flatten $ m
 {-# INLINE force #-}
 
+map :: (G.Vector v a, G.Vector v b) => (a -> b) -> Matrix v a -> Matrix v b
+map f m@(Matrix r c _ _ _) = MG.fromVector (r,c) $ G.map f . MG.flatten $ m
+{-# INLINE map #-}
+
 imap :: (G.Vector v a, G.Vector v b) => ((Int, Int) -> a -> b) -> Matrix v a -> Matrix v b
 imap f m@(Matrix r c _ _ _) = MG.fromVector (r,c) $ G.imap f' . MG.flatten $ m
   where
     f' i = f (i `div` c, i `mod` c)
 {-# INLINE imap #-}
 
-map :: (G.Vector v a, G.Vector v b) => (a -> b) -> Matrix v a -> Matrix v b
-map f m@(Matrix r c _ _ _) = MG.fromVector (r,c) $ G.map f . MG.flatten $ m
-{-# INLINE map #-}
-
 foldl :: G.Vector v b => (a -> b -> a) -> a -> Matrix v b -> a
 foldl f acc m = G.foldl f acc . MG.flatten $ m
 {-# INLINE foldl #-}
 
-mapM :: (G.Vector v a, G.Vector v b, Monad m) => (a -> m b) -> Matrix v a -> m (Matrix v b)
-mapM f m@(Matrix r c _ _ _) = liftM (MG.fromVector (r,c)) . G.mapM f . MG.flatten $ m
+mapM :: (G.Vector v a, G.Vector v b, Monad m)
+     => (a -> m b) -> Matrix v a -> m (Matrix v b)
+mapM f m@(Matrix r c _ _ _) = liftM (MG.fromVector (r,c)) $ G.mapM f $ MG.flatten m
 {-# INLINE mapM #-}
+
+-- | O(m*n) Apply the monadic action to every element and its index,
+-- yielding a matrix of results.
+imapM :: (G.Vector v a, G.Vector v b, Monad m)
+      => ((Int, Int) -> a -> m b) -> Matrix v a -> m (Matrix v b)
+imapM f m@(Matrix r c _ _ _) = fmap (MG.fromVector (r,c)) $ G.imapM f' $
+    MG.flatten m
+  where
+    f' i = f (i `div` c, i `mod` c)
+{-# INLINE imapM #-}
 
 mapM_ :: (G.Vector v a, Monad m) => (a -> m b) -> Matrix v a -> m ()
 mapM_ f = G.mapM_ f . MG.flatten
 {-# INLINE mapM_ #-}
 
-forM :: (G.Vector v a, G.Vector v b, Monad m) => Matrix v a -> (a -> m b) -> m (Matrix v b)
+-- | O(m*n) Apply the monadic action to every element and its index,
+-- ignoring the results.
+imapM_ :: (G.Vector v a, Monad m)
+       => ((Int, Int) -> a -> m b) -> Matrix v a -> m ()
+imapM_ f m@(Matrix _ c _ _ _) = G.imapM_ f' $ MG.flatten m
+  where
+    f' i = f (i `div` c, i `mod` c)
+{-# INLINE imapM_ #-}
+
+forM :: (G.Vector v a, G.Vector v b, Monad m)
+     => Matrix v a -> (a -> m b) -> m (Matrix v b)
 forM = flip mapM
 {-# INLINE forM #-}
 
