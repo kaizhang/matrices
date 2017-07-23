@@ -39,7 +39,6 @@ module Data.Matrix.Sparse.Generic
     , MG.toLists
     ) where
 
-import           Control.Applicative               ((<$>))
 import           Control.Monad                     (foldM, forM_, when)
 import           Control.Monad.ST                  (runST)
 import           Data.Bits                         (shiftR)

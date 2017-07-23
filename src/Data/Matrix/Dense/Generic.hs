@@ -278,7 +278,7 @@ map f m@(Matrix r c _ _ _) = MG.fromVector (r,c) $ G.map f . MG.flatten $ m
 imap :: (G.Vector v a, G.Vector v b) => ((Int, Int) -> a -> b) -> Matrix v a -> Matrix v b
 imap f m@(Matrix r c _ _ _) = MG.fromVector (r,c) $ G.imap f' . MG.flatten $ m
   where
-    f' i = f (i `div` c, i `mod` c)
+    f' i = f (i `divMod` c)
 {-# INLINE imap #-}
 
 foldl :: G.Vector v b => (a -> b -> a) -> a -> Matrix v b -> a
@@ -297,7 +297,7 @@ imapM :: (G.Vector v a, G.Vector v b, Monad m)
 imapM f m@(Matrix r c _ _ _) = fmap (MG.fromVector (r,c)) $ G.imapM f' $
     MG.flatten m
   where
-    f' i = f (i `div` c, i `mod` c)
+    f' i = f (i `divMod` c)
 {-# INLINE imapM #-}
 
 mapM_ :: (G.Vector v a, Monad m) => (a -> m b) -> Matrix v a -> m ()
@@ -310,7 +310,7 @@ imapM_ :: (G.Vector v a, Monad m)
        => ((Int, Int) -> a -> m b) -> Matrix v a -> m ()
 imapM_ f m@(Matrix _ c _ _ _) = G.imapM_ f' $ MG.flatten m
   where
-    f' i = f (i `div` c, i `mod` c)
+    f' i = f (i `divMod` c)
 {-# INLINE imapM_ #-}
 
 forM :: (G.Vector v a, G.Vector v b, Monad m)
@@ -389,7 +389,7 @@ izipWith f m1 m2
                   G.izipWith f' (MG.flatten m1) $ MG.flatten m2
   where
     c = MG.cols m1
-    f' i = f (i `div` c, i `mod` c)
+    f' i = f (i `divMod` c)
 {-# INLINE izipWith #-}
 
 izipWith3 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d)
@@ -402,7 +402,7 @@ izipWith3 f m1 m2 m3
                   G.izipWith3 f' (MG.flatten m1) (MG.flatten m2) $ MG.flatten m3
   where
     c = MG.cols m1
-    f' i = f (i `div` c, i `mod` c)
+    f' i = f (i `divMod` c)
 {-# INLINE izipWith3 #-}
 
 izipWith4 :: (G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d, G.Vector v e)
@@ -417,7 +417,7 @@ izipWith4 f m1 m2 m3 m4
                   (MG.flatten m3) $ MG.flatten m4
   where
     c = MG.cols m1
-    f' i = f (i `div` c, i `mod` c)
+    f' i = f (i `divMod` c)
 {-# INLINE izipWith4 #-}
 
 izipWith5 :: ( G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d
@@ -434,7 +434,7 @@ izipWith5 f m1 m2 m3 m4 m5
                   (MG.flatten m3) (MG.flatten m4) $ MG.flatten m5
   where
     c = MG.cols m1
-    f' i = f (i `div` c, i `mod` c)
+    f' i = f (i `divMod` c)
 {-# INLINE izipWith5 #-}
 
 izipWith6 :: ( G.Vector v a, G.Vector v b, G.Vector v c, G.Vector v d
@@ -453,7 +453,7 @@ izipWith6 f m1 m2 m3 m4 m5 m6
                   (MG.flatten m4) (MG.flatten m5) $ MG.flatten m6
   where
     c = MG.cols m1
-    f' i = f (i `div` c, i `mod` c)
+    f' i = f (i `divMod` c)
 {-# INLINE izipWith6 #-}
 
 
@@ -599,5 +599,5 @@ sequence_ (Matrix _ _ _ _ vec) = G.sequence_ vec
 {-# INLINE sequence_ #-}
 
 generate :: G.Vector v a => (Int, Int) -> ((Int, Int) -> a) -> Matrix v a
-generate (r,c) f = MG.fromVector (r,c) . G.generate (r*c) $ \i -> f (i `div` c, i `mod` c)
+generate (r,c) f = MG.fromVector (r,c) . G.generate (r*c) $ \i -> f (i `divMod` c)
 {-# INLINE generate #-}

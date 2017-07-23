@@ -43,7 +43,7 @@ class (MM.MMatrix (Mutable m) (G.Mutable v) a, G.Vector v a) => Matrix m v a whe
 
     -- | Default algorithm is O((m*n) * O(unsafeIndex)).
     flatten :: m v a -> v a
-    flatten mat = G.generate (r*c) $ \i -> unsafeIndex mat (i `div` c, i `mod` c)
+    flatten mat = G.generate (r*c) $ \i -> unsafeIndex mat (i `divMod` c)
       where
         (r,c) = dim mat
     {-# INLINE flatten #-}
