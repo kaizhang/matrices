@@ -120,7 +120,7 @@ import           GHC.Generics                      (Generic)
 
 type instance MG.Mutable Matrix = MMatrix
 
--- | Row-major matrix supporting efficient slice
+-- | Row-major matrix supporting efficient slice.
 data Matrix v a = Matrix !Int    -- number of rows
                          !Int    -- number of cols
                          !Int    -- physical row dimension
@@ -192,13 +192,13 @@ subMatrix :: G.Vector v a
           => (Int, Int)  -- ^ upper left corner of the submatrix
           -> (Int, Int)  -- ^ bottom right corner of the submatrix
           -> Matrix v a -> Matrix v a
-subMatrix (i,j) (i',j') (Matrix _ n tda offset vec)
+subMatrix (i,j) (i',j') (Matrix _ _ tda offset vec)
     | m' <= 0 || n' <= 0 = MG.empty
     | otherwise = Matrix m' n' tda offset' vec
   where
     m' = i' - i + 1
     n' = j' - j + 1
-    offset' = offset + i * n + j
+    offset' = offset + i * tda + j
 {-# INLINE subMatrix #-}
 
 -- | O(m*n) Matrix transpose
