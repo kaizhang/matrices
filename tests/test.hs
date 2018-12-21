@@ -1,7 +1,6 @@
 import Test.Tasty
 import qualified Data.Matrix.Unboxed as MU
-import qualified Data.Matrix.Generic as MG
-import qualified Data.Matrix.Dense.Generic as MD
+import qualified Data.Matrix.Class as C
 import qualified Data.Matrix.Sparse.Generic as MS
 import qualified Data.Vector.Unboxed as U
 import Test.Tasty.HUnit
@@ -16,16 +15,16 @@ main = defaultMain $ testGroup "Main"
 testEqual :: Assertion
 testEqual = do
     let xs = [0,0,0,0,1,2,3,0,0,0,0,0,4,5,67,0,0,2,40,0,2,0,0,20,0,0,0]
-        m1 = MG.fromList (3,9) xs :: MD.Matrix U.Vector Int
-        al = filter ((/=0) . snd) $ MD.toList $ MD.imap (\i v -> (i,v)) m1
-        m2 = MG.fromList (3,9) xs :: MS.CSR U.Vector Int
+        m1 = MU.fromList (3,9) xs
+        al = filter ((/=0) . snd) $ MU.toList $ MU.imap (\i v -> (i,v)) m1
+        m2 = C.fromList (3,9) xs :: MS.CSR U.Vector Int
         m3 = MS.fromAscAL (3,9) (length al) al :: MS.CSR U.Vector Int
 
-        row1 = MG.toRows m1
-        row2 = MG.toRows m2
+        row1 = C.toRows m1
+        row2 = C.toRows m2
 
 --    assertEqual "x" (MG.flatten m1) (MG.flatten m2)
-    assertEqual "x" (MG.flatten m2) (MG.flatten m3)
+    assertEqual "x" (C.flatten m2) (C.flatten m3)
     assertEqual "x" row1 row2
 
 subMatrixTest :: TestTree

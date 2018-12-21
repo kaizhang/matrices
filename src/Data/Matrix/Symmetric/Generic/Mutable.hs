@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Data.Matrix.Symmetric.Mutable
+module Data.Matrix.Symmetric.Generic.Mutable
    ( -- * Mutable Matrix
      SymMMatrix(..)
    , C.dim
@@ -17,7 +17,7 @@ import           Data.Bits                   (shiftR)
 import qualified Data.Vector.Generic.Mutable as GM
 import           Prelude                     hiding (read, replicate)
 
-import qualified Data.Matrix.Generic.Mutable as C
+import qualified Data.Matrix.Class.Mutable as C
 
 -- | mutable matrix
 data SymMMatrix v s a = SymMMatrix !Int !(v s a)

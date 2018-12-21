@@ -1,46 +1,52 @@
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies          #-}
-
 module Data.Matrix.Generic.Mutable
-    ( MMatrix(..)
-    , write
-    , read
-    ) where
+   ( -- * Mutable Matrix
+     MMatrix(..)
+   , C.dim
+   , takeRow
+   , C.write
+   , C.unsafeWrite
+   , C.read
+   , C.unsafeRead
+   , C.new
+   , C.replicate
+   ) where
 
-import           Control.Monad.Primitive     (PrimMonad, PrimState)
+import           Control.Monad               (liftM)
+import           Control.DeepSeq
 import qualified Data.Vector.Generic.Mutable as GM
-import           Prelude                     hiding (read)
+import           Prelude                     hiding (read, replicate)
 
-class GM.MVector v a => MMatrix m v a where
-    dim ::  m v s a -> (Int, Int)
+import qualified Data.Matrix.Class.Mutable as C
 
-    unsafeRead :: PrimMonad s => m v (PrimState s) a -> (Int, Int) -> s a
+-- | mutable matrix
+data MMatrix v s a = MMatrix !Int !Int !Int !Int !(v s a)
 
-    unsafeWrite :: PrimMonad s => m v (PrimState s) a -> (Int, Int) -> a -> s ()
+instance (NFData (v s a)) => NFData (MMatrix v s a) where
+ rnf (MMatrix _ _ _ _ vec) = rnf vec
 
-    -- | Create a mutable matrix without initialization
-    new :: PrimMonad s => (Int, Int) -> s (m v (PrimState s) a)
+instance GM.MVector v a => C.MMatrix MMatrix v a where
+    dim (MMatrix r c _ _ _) = (r,c)
+    {-# INLINE dim #-}
 
-    replicate :: PrimMonad s => (Int, Int) -> a -> s (m v (PrimState s) a)
+    unsafeRead (MMatrix _ _ tda offset v) (i,j) = GM.unsafeRead v idx
+      where idx = offset + i * tda + j
+    {-# INLINE unsafeRead #-}
 
-    {-# MINIMAL dim, unsafeRead, unsafeWrite, new, replicate #-}
+    unsafeWrite (MMatrix _ _ tda offset v) (i,j) = GM.unsafeWrite v idx
+      where idx = offset + i * tda + j
+    {-# INLINE unsafeWrite #-}
 
--- | Derived methods
+    new (r,c) = MMatrix r c c 0 `liftM` GM.new (r*c)
+    {-# INLINE new #-}
 
-write :: (PrimMonad s, MMatrix m v a)
-      => m v (PrimState s) a -> (Int, Int) -> a -> s ()
-write mat (i,j)
-    | i < 0 || i >= r || j < 0 || j >= c = error "write: Index out of bounds"
-    | otherwise = unsafeWrite mat (i,j)
+    replicate (r,c) x = MMatrix r c c 0 `liftM` GM.replicate (r*c) x
+    {-# INLINE replicate #-}
+
+takeRow :: GM.MVector v a => MMatrix v m a -> Int -> v m a
+takeRow (MMatrix _ c tda offset vec) i = GM.slice i' c vec
   where
-    (r,c) = dim mat
-{-# INLINE write #-}
-
-read :: (PrimMonad s, MMatrix m v a)
-     => m v (PrimState s) a -> (Int, Int) -> s a
-read mat (i,j)
-    | i <0 || i >= r || j < 0 || j >= c = error "read: Index out of bounds"
-    | otherwise = unsafeRead mat (i,j)
-  where
-    (r,c) = dim mat
-{-# INLINE read #-}
+    i' = offset + i * tda
+{-# INLINE takeRow #-}

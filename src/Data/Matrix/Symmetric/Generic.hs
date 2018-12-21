@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE DeriveGeneric      #-}
-module Data.Matrix.Symmetric
+module Data.Matrix.Symmetric.Generic
     ( SymMatrix(..)
     , dim
     , rows
@@ -20,7 +20,7 @@ module Data.Matrix.Symmetric
     , freeze
     , unsafeFreeze
     , create
-    , Data.Matrix.Symmetric.map
+    , Data.Matrix.Symmetric.Generic.map
     , imap
     , zip
     , zipWith
@@ -32,8 +32,8 @@ import qualified Data.Vector.Generic           as G
 import           Prelude                       hiding (zip, zipWith)
 import           GHC.Generics          (Generic)
 
-import           Data.Matrix.Generic
-import           Data.Matrix.Symmetric.Mutable (SymMMatrix (..), new,
+import           Data.Matrix.Class
+import           Data.Matrix.Symmetric.Generic.Mutable (SymMMatrix (..), new,
                                                 unsafeWrite)
 
 type instance Mutable SymMatrix = SymMMatrix

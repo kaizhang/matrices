@@ -48,8 +48,8 @@ import qualified Data.Vector.Unboxed               as U
 import           Text.Printf                       (printf)
 import           GHC.Generics          (Generic)
 
-import           Data.Matrix.Dense.Generic.Mutable (MMatrix)
-import qualified Data.Matrix.Generic               as MG
+import           Data.Matrix.Generic.Mutable (MMatrix)
+import qualified Data.Matrix.Class as MG
 
 class Eq a => Zero a where
     zero :: a
