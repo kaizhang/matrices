@@ -9,8 +9,14 @@ main :: IO ()
 main = defaultMain $ testGroup "Main"
     [ testCase "xx" testEqual
     , subMatrixTest
+    , subMatrixEqual
     ]
 
+subMatrixEqual :: TestTree
+subMatrixEqual = testCase "submatrix equal" $ assertEqual "x" mat submat
+  where
+    mat = MU.fromLists [[1]] :: MU.Matrix Int
+    submat = MU.subMatrix (0,0) (0,0) (MU.fromLists [[1,2],[3,4]]) :: MU.Matrix Int
 
 testEqual :: Assertion
 testEqual = do

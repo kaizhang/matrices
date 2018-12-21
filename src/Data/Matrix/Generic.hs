@@ -127,10 +127,13 @@ data Matrix v a = Matrix !Int    -- number of rows
                          !Int    -- physical row dimension
                          !Int    -- offset
                          !(v a)  -- flat matrix
-    deriving (Show, Read, Eq, Generic)
+    deriving (Show, Read, Generic)
+
+instance (G.Vector v a, Eq (v a)) => Eq (Matrix v a) where
+    (==) m1 m2 = MG.flatten m1 == MG.flatten m2
 
 instance NFData (v a) => NFData (Matrix v a) where
- rnf (Matrix _ _ _ _ vec) = rnf vec
+    rnf (Matrix _ _ _ _ vec) = rnf vec
 
 instance G.Vector v a => MG.Matrix Matrix v a where
     -- | O(1) Return the size of matrix.
