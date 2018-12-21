@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE Rank2Types            #-}
 {-# LANGUAGE TypeFamilies          #-}
 module Data.Matrix.Class
@@ -32,7 +33,8 @@ import           Text.Printf
 
 import qualified Data.Matrix.Class.Mutable as MM
 
-type family Mutable (m :: (* -> *) -> * -> *) :: (* -> * -> *) -> * -> * -> *
+type family Mutable (m :: (* -> *) -> * -> *) =
+    (mm :: (* -> * -> *) -> * -> * -> *) | mm -> m
 
 class (MM.MMatrix (Mutable m) (G.Mutable v) a, G.Vector v a) => Matrix m v a where
     dim :: m v a -> (Int, Int)
